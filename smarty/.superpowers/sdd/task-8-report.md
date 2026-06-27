@@ -63,3 +63,17 @@ Route (app)
 
 Build: `npm run build` -- passed (TypeScript check + compilation success, no errors)
 Commit: `6eac0bc` -- `feat: add offer negotiation system`
+
+---
+
+## Bugfix: Prevent seller from acting on countered offers (2026-06-28)
+
+**Bug:** In the "Received Offers" tab, action buttons (accept/refuse/counter) were shown for COUNTERED offers where the seller was the one who made the counter-offer. This theoretically allowed a seller to accept their own counter.
+
+**Fix:** Added `offer.status === 'PENDING'` guard to the outer action buttons condition in `OfferCard` (line 261), reinforcing that action buttons only render for PENDING offers. The inner conditions (`showAcceptRefuse`, `showAcceptCounter`, `showCounter`) already checked for `PENDING`, but the outer guard now makes the intent explicit and prevents any edge case where a non-PENDING offer could render action buttons.
+
+**File modified:** `src/components/offer/offers-tabs.tsx`
+
+**Verification:** `npx tsc --noEmit` -- passed, no errors.
+
+**Commit:** `1cb4743` -- `fix: prevent seller from acting on countered offers`
