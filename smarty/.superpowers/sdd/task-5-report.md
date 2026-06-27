@@ -67,3 +67,39 @@ No build errors, TypeScript errors, or compilation warnings (other than the pre-
 3. **Route group structure**: Three route groups isolate layout concerns -- `(public)` for the main site, `(account)` for authenticated user pages, `(admin)` for admin pages. The `(auth)` group (from Task 4) remains layout-free.
 
 4. **Romanian text**: All visible UI text is in Romanian per project conventions.
+
+---
+
+## Spec Compliance Fixes (Task 5 — Follow-up)
+
+### Fix 1: Account Sidebar — Missing Nav Items
+**File:** `src/components/layout/account-sidebar.tsx`
+
+Added 4 missing nav items under the "Cumparaturi" group:
+- `/cont/oferte` — Oferte
+- `/cont/cereri` — Cererile mele
+- `/cont/wallet` — Portofel
+- `/cont/retururi` — Retururi
+
+### Fix 2: Header — Cereri Link and +Vinde Button
+**File:** `src/components/layout/header-client.tsx`
+
+- Added `{ label: "Cereri", href: "/cereri" }` to the `navLinks` array (appears in both desktop nav and mobile sheet menu)
+- Added `+ Vinde` button (`<Button variant="outline" size="sm">`) linking to `/produse/nou`, rendered conditionally when the user is authenticated — present in both desktop nav (after nav links) and mobile sheet menu
+
+### Fix 3: Footer — Corrected Column Structure
+**File:** `src/components/layout/footer.tsx`
+
+Replaced previous footer with spec-aligned 4-column layout:
+- **Col 1 — Smarty:** Despre noi, Contact, Blog
+- **Col 2 — Cumparaturi:** Makeup, Ingrijire, Haine
+- **Col 3 — Ajutor:** Cum functioneaza, Termeni si conditii, Politica de retur
+- **Col 4 — Contact:** contact@smarty.ro, L-V: 09:00 - 18:00
+- **Copyright:** (c) 2026 Smarty Marketplace. Toate drepturile rezervate.
+
+### Verification
+- `npx tsc --noEmit` — passed (0 errors)
+- `npm run build` — passed (compiled successfully, all routes generated)
+
+### Commit
+`a8f28c8` — `fix: add missing nav items, header elements, and correct footer columns`
