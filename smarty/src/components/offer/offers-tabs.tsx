@@ -257,8 +257,8 @@ function OfferCard({
           </div>
         </CardContent>
 
-        {/* Action buttons */}
-        {(showAcceptRefuse || showAcceptCounter || showCounter) && (
+        {/* Action buttons — only show for PENDING offers, never for COUNTERED */}
+        {(offer.status === 'PENDING' && (showAcceptRefuse || showAcceptCounter || showCounter)) && (
           <CardFooter className="flex flex-wrap gap-2">
             {/* Seller: accept/refuse/counter for received PENDING offers */}
             {showAcceptRefuse && (
