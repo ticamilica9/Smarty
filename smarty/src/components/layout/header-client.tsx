@@ -105,7 +105,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                 <>
                   <SheetClose>
                     <Link
-                      href="/produse/nou"
+                      href="/cont/produse/nou"
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
                     >
                       + Vinde
@@ -186,7 +186,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
             </Link>
           ))}
           {user && (
-            <Link href="/produse/nou">
+            <Link href="/cont/produse/nou">
               <Button variant="outline" size="sm" className="ml-2">
                 + Vinde
               </Button>
@@ -287,7 +287,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link
-                    href="/cont/anunt-nou"
+                    href="/cont/produse/nou"
                     className="flex w-full items-center gap-2"
                   >
                     <PlusCircleIcon className="size-4" />
