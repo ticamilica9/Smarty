@@ -4,3 +4,4 @@ Task 6: complete (commit cc07bbc, seed categories, tRPC router, browse pages, pr
 Task 6: complete (commits a8f28c8..1cf5d4d, 2 fixes)
 Task 7: complete
 Task 7: complete (commits 1cf5d4d..24f75d2, nav link fix)
+Task 8: complete (commit 6eac0bc, offer negotiation system)
