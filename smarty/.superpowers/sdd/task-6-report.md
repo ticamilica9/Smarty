@@ -76,6 +76,34 @@ Seed script executed successfully: 59 categories populated across 3 levels.
 
 ---
 
+## Fixes Applied (Round 2)
+
+### Fix 1: Breadcrumb logic
+Replaced manual grandparent-fetching with a tRPC `getAncestors` call. The old code only walked one level up (parent + grandparent); the new code delegates to the `category.getAncestors` procedure which walks the full parent chain. The `caller` is obtained via `api()` from `@/lib/trpc/server`.
+
+| Before | After |
+|--------|-------|
+| Manual `prisma.productCategory.findUnique` for grandparent with fallback `?? ''` | `caller.category.getAncestors({ slug })` |
+| Hard-coded limit of 2 ancestor levels | Arbitrary depth via `while (current.parentId)` loop in procedure |
+
+### Fix 2: Type safety
+Replaced the `as any` cast on the condition filter with Zod validation. Each raw `stare` value is validated through `z.enum(['NEW', 'LIKE_NEW', 'GOOD', 'FAIR']).optional().safeParse()`, and only valid values are passed to Prisma. Invalid values are silently filtered out rather than causing a runtime error or SQL injection vector.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/categorii/[slug]/page.tsx` | Added `z` and `api` imports; replaced manual breadcrumb building with `caller.category.getAncestors`; replaced `as any` cast with Zod `safeParse` validation |
+
+### Verification
+
+- `npx tsc --noEmit` -- passed (no errors)
+- `npm run build` -- passed (all routes compile, no TypeScript errors)
+
 ## Commit
 
 `cc07bbc` -- `feat: implement categories, browse, and seed script`
+
+## Fixes Commit
+
+`1cf5d4d` -- `fix: use getAncestors for breadcrumbs, validate condition filter`

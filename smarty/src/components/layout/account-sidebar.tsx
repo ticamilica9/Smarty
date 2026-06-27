@@ -39,7 +39,7 @@ const sidebarLinks = [
     group: "Vanzari",
     links: [
       { label: "Produsele mele", href: "/cont/produse", icon: PackageIcon },
-      { label: "Adauga anunt", href: "/cont/anunt-nou", icon: PlusCircleIcon },
+      { label: "Adauga anunt", href: "/cont/produse/nou", icon: PlusCircleIcon },
       { label: "Vanzari", href: "/cont/vanzari", icon: StoreIcon },
     ],
   },
