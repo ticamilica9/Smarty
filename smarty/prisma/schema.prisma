@@ -1,12 +1,329 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum ProductCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+}
+
+enum ProductStatus {
+  ACTIVE
+  SOLD
+  HIDDEN
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REFUSED
+  COUNTERED
+}
+
+enum RFQStatus {
+  OPEN
+  CLOSED
+  AWARDED
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  SHIPPED
+  DELIVERED
+  RETURNED
+  DISPUTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  HELD
+  RELEASED
+  REFUNDED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  ACCEPTED
+  REFUSED
+  SHIPPED_BACK
+  REFUNDED
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id              String         @id @default(cuid())
+  name            String?
+  email           String         @unique
+  emailVerified   DateTime?
+  image           String?
+  phone           String?
+  buyerRating     Float          @default(0)
+  sellerRating    Float          @default(0)
+  stripeConnectId String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  role            String         @default("USER")
+
+  accounts         Account[]
+  sessions         Session[]
+  addresses        UserAddress[]
+  sellerProfile    SellerProfile?
+  products         Product[]
+  offers           Offer[]         @relation("BuyerOffers")
+  receivedOffers   Offer[]         @relation("SellerOffers")
+  rfqs             RFQ[]
+  rfqOffers        RFQOffer[]
+  buyerOrders      Order[]         @relation("BuyerOrders")
+  sellerOrders     Order[]         @relation("SellerOrders")
+  reviews          Review[]
+  returns          Return[]
+  wishlistItems    WishlistItem[]
+}
+
+model SellerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  storeName   String
+  description String?  @db.Text
+  returnPolicy String? @db.Text
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserAddress {
+  id         String  @id @default(cuid())
+  userId     String
+  label      String  @default("Principala")
+  city       String
+  address    String
+  postalCode String
+  phone      String
+  isDefault  Boolean @default(false)
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ProductCategory {
+  id       String            @id @default(cuid())
+  name     String
+  slug     String            @unique
+  parentId String?
+  icon     String?
+  parent   ProductCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children ProductCategory[] @relation("CategoryTree")
+  products Product[]
+  rfqs     RFQ[]
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  sellerId    String
+  title       String
+  description String           @db.Text
+  categoryId  String
+  condition   ProductCondition @default(GOOD)
+  price       Float
+  brand       String?
+  shade       String?
+  skinType    String?
+  images      String[]         @default([])
+  status      ProductStatus    @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  seller     User            @relation(fields: [sellerId], references: [id])
+  category   ProductCategory @relation(fields: [categoryId], references: [id])
+  variants     ProductVariant[]
+  offers       Offer[]
+  orders       Order[]
+  wishlistItems WishlistItem[]
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  attribute String
+  value     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Offer {
+  id             String      @id @default(cuid())
+  productId      String
+  buyerId        String
+  sellerId       String
+  amount         Float
+  status         OfferStatus @default(PENDING)
+  counterOfferId String?
+  round          Int         @default(1)
+  expiresAt      DateTime
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  product        Product     @relation(fields: [productId], references: [id])
+  buyer          User        @relation("BuyerOffers", fields: [buyerId], references: [id])
+  seller         User        @relation("SellerOffers", fields: [sellerId], references: [id])
+  order          Order?
+}
+
+model RFQ {
+  id          String    @id @default(cuid())
+  buyerId     String
+  title       String
+  description String    @db.Text
+  categoryId  String
+  maxBudget   Float
+  expiresAt   DateTime
+  status      RFQStatus @default(OPEN)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  buyer       User            @relation(fields: [buyerId], references: [id])
+  category    ProductCategory @relation(fields: [categoryId], references: [id])
+  offers      RFQOffer[]
+}
+
+model RFQOffer {
+  id        String      @id @default(cuid())
+  rfqId     String
+  sellerId  String
+  productId String?
+  amount    Float
+  message   String?     @db.Text
+  status    OfferStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+
+  rfq       RFQ         @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  seller    User        @relation(fields: [sellerId], references: [id])
+  order     Order?
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  buyerId    String
+  sellerId   String
+  productId  String
+  offerId    String?     @unique
+  rfqOfferId String?     @unique
+  amount     Float
+  status     OrderStatus @default(CREATED)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  buyer      User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  seller     User        @relation("SellerOrders", fields: [sellerId], references: [id])
+  product    Product     @relation(fields: [productId], references: [id])
+  offer      Offer?      @relation(fields: [offerId], references: [id])
+  rfqOffer   RFQOffer?   @relation(fields: [rfqOfferId], references: [id])
+  payment    Payment?
+  shipment   Shipment?
+  review     Review?
+  return_    Return?
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  orderId               String        @unique
+  stripePaymentIntentId String        @unique
+  stripeTransferId      String?
+  amount                Float
+  status                PaymentStatus @default(HELD)
+  escrowReleasedAt      DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  order                 Order         @relation(fields: [orderId], references: [id])
+}
+
+model Shipment {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  easyboxAWB        String   @unique
+  trackingUrl       String?
+  pickupCode        String
+  status            String   @default("AWB_CREATED")
+  estimatedDelivery DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  order             Order    @relation(fields: [orderId], references: [id])
+}
+
+model Return {
+  id        String       @id @default(cuid())
+  orderId   String       @unique
+  buyerId   String
+  reason    String       @db.Text
+  images    String[]     @default([])
+  status    ReturnStatus @default(REQUESTED)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  buyer     User         @relation(fields: [buyerId], references: [id])
+  order     Order        @relation(fields: [orderId], references: [id])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  orderId    String   @unique
+  reviewerId String
+  targetId   String
+  rating     Int
+  text       String?  @db.Text
+  images     String[] @default([])
+  createdAt  DateTime @default(now())
+
+  order      Order    @relation(fields: [orderId], references: [id])
+  reviewer   User     @relation(fields: [reviewerId], references: [id])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
 }
