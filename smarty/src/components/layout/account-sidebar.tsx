@@ -78,6 +78,22 @@ export function AccountSidebar() {
                 </Link>
               )
             })}
+            {group.group === "Cumparaturi" && (
+              <>
+                <Link href="/cont/oferte" className="block rounded px-3 py-2 hover:bg-muted">
+                  Oferte
+                </Link>
+                <Link href="/cont/cereri" className="block rounded px-3 py-2 hover:bg-muted">
+                  Cererile mele
+                </Link>
+                <Link href="/cont/wallet" className="block rounded px-3 py-2 hover:bg-muted">
+                  Portofel
+                </Link>
+                <Link href="/cont/retururi" className="block rounded px-3 py-2 hover:bg-muted">
+                  Retururi
+                </Link>
+              </>
+            )}
             <Separator className="my-2" />
           </div>
         ))}

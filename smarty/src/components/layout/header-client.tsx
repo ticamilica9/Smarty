@@ -50,6 +50,7 @@ const navLinks = [
   { label: "Acasa", href: "/" },
   { label: "Categorii", href: "/categorii" },
   { label: "Oferte", href: "/oferte" },
+  { label: "Cereri", href: "/cereri" },
   { label: "RFQ-uri", href: "/rfq-uri" },
   { label: "Blog", href: "/blog" },
 ]
@@ -102,6 +103,14 @@ export function HeaderClient({ user }: HeaderClientProps) {
               <Separator className="my-2" />
               {user ? (
                 <>
+                  <SheetClose>
+                    <Link
+                      href="/produse/nou"
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      + Vinde
+                    </Link>
+                  </SheetClose>
                   <SheetClose>
                     <Link
                       href="/cont"
@@ -176,6 +185,13 @@ export function HeaderClient({ user }: HeaderClientProps) {
               {link.label}
             </Link>
           ))}
+          {user && (
+            <Link href="/produse/nou">
+              <Button variant="outline" size="sm" className="ml-2">
+                + Vinde
+              </Button>
+            </Link>
+          )}
         </nav>
 
         {/* Spacer */}
