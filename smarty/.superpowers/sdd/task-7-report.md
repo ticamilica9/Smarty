@@ -56,3 +56,15 @@ Route (app)
 
 TypeScript check: `npx tsc --noEmit` -- passed (no errors)
 Build: `npm run build` -- passed (all routes compile, no TypeScript errors)
+
+## Fix: Navigation link corrections (2026-06-28)
+
+Two broken navigation links in the header were corrected to point to the actual product creation route at `/cont/produse/nou`:
+
+| Location | Before | After |
+|----------|--------|-------|
+| User dropdown "Adauga anunt" | `/cont/anunt-nou` | `/cont/produse/nou` |
+| Mobile sidebar "+ Vinde" | `/produse/nou` | `/cont/produse/nou` |
+| Desktop nav "+ Vinde" | `/produse/nou` | `/cont/produse/nou` |
+
+**File changed**: `src/components/layout/header-client.tsx`

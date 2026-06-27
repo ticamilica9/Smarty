@@ -3,3 +3,4 @@ Task 5: complete (commits 665386d..a8f28c8, 3 spec fixes applied)
 Task 6: complete (commit cc07bbc, seed categories, tRPC router, browse pages, product components)
 Task 6: complete (commits a8f28c8..1cf5d4d, 2 fixes)
 Task 7: complete
+Task 7: complete (commits 1cf5d4d..24f75d2, nav link fix)
