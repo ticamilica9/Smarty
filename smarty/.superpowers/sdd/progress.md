@@ -6,3 +6,4 @@ Task 7: complete
 Task 7: complete (commits 1cf5d4d..24f75d2, nav link fix)
 Task 8: complete (commit 6eac0bc, offer negotiation system)
 Task 8: complete (commits 24f75d2..1cb4743, counter-offer bug fix)
+Task 9: complete (commits 1cb4743..7a7f12d, review clean)
