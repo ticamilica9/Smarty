@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { z } from 'zod'
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { ProductGrid } from '@/components/product/product-grid'
 import { ProductFilters } from '@/components/product/product-filters'
 import { prisma } from '@/lib/prisma'
+import { api } from '@/lib/trpc/server'
 import { cn } from '@/lib/utils'
 
 interface CategoryPageProps {
@@ -34,23 +36,24 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     notFound()
   }
 
-  // Build ancestor chain
-  const ancestors: { label: string; href?: string }[] = []
-  if (category.parent) {
-    const grandparent = await prisma.productCategory.findUnique({
-      where: { id: category.parent.parentId ?? '' },
-      select: { name: true, slug: true },
-    })
-
-    if (grandparent) {
-      ancestors.push({ label: grandparent.name, href: `/categorii/${grandparent.slug}` })
-    }
-    ancestors.push({ label: category.parent.name, href: `/categorii/${category.parent.slug}` })
-  }
+  // Build ancestor chain via tRPC
+  const caller = await api()
+  const ancestorData = await caller.category.getAncestors({ slug })
+  const ancestors: { label: string; href?: string }[] = ancestorData.map((a) => ({
+    label: a.name,
+    href: `/categorii/${a.slug}`,
+  }))
   ancestors.push({ label: category.name })
 
   // Query products
-  const conditions = sp.stare ? (Array.isArray(sp.stare) ? sp.stare : [sp.stare]) : undefined
+  const conditionSchema = z.enum(['NEW', 'LIKE_NEW', 'GOOD', 'FAIR']).optional()
+  const rawCondition = sp.stare ? (Array.isArray(sp.stare) ? sp.stare : [sp.stare]) : undefined
+  const validConditions = rawCondition
+    ?.map((c) => {
+      const result = conditionSchema.safeParse(c)
+      return result.success ? result.data : null
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null)
   const priceMin = sp.pretMin ? Number(sp.pretMin) : undefined
   const priceMax = sp.pretMax ? Number(sp.pretMax) : undefined
 
@@ -58,7 +61,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     where: {
       categoryId: category.id,
       status: 'ACTIVE',
-      ...(conditions && conditions.length > 0 ? { condition: { in: conditions as any } } : {}),
+      ...(validConditions && validConditions.length > 0 ? { condition: { in: validConditions } } : {}),
       ...(priceMin !== undefined || priceMax !== undefined
         ? {
             price: {
