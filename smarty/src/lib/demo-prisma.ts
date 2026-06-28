@@ -1,5 +1,5 @@
 // Demo data wrapper — falls back to in-memory data when DB is unavailable
-import { demoCategories, demoProducts, demoUsers, demoRFQs, getDemoProductById } from './demo-data'
+import { demoCategories, demoProducts, demoUsers, demoOrders, demoRFQs, getDemoProductById, getDemoUserById } from './demo-data'
 
 const USE_DEMO = true // Set to false once PostgreSQL is working
 
@@ -20,9 +20,26 @@ async function withFallback<T>(dbCall: Promise<T>, fallback: T, timeoutMs = 3000
 export function createDemoPrismaClient(realPrisma: any) {
   return new Proxy(realPrisma, {
     get(target, model: string) {
-      if (model === '$transaction' || model === '$connect' || model === '$disconnect') {
+      if (model === '$transaction') {
         return (...args: any[]) => {
-          if (USE_DEMO) return args[0]?.(target) || Promise.resolve()
+          if (USE_DEMO) {
+            // Support array of promises
+            if (Array.isArray(args[0])) {
+              return Promise.all(args[0])
+            }
+            // Support callback function
+            if (typeof args[0] === 'function') {
+              return args[0](target)
+            }
+            return Promise.resolve()
+          }
+          return (target as any).$transaction(...args)
+        }
+      }
+
+      if (model === '$connect' || model === '$disconnect') {
+        return (...args: any[]) => {
+          if (USE_DEMO) return Promise.resolve()
           return (target as any)[model](...args)
         }
       }
@@ -51,7 +68,13 @@ export function createDemoPrismaClient(realPrisma: any) {
         },
         product: {
           findMany: async (args: any) => {
-            let products = demoProducts.filter(p => p.status === 'ACTIVE')
+            let products = [...demoProducts]
+            // Only filter by ACTIVE when no status filter is provided (public queries)
+            if (!args?.where?.status) {
+              products = products.filter(p => p.status === 'ACTIVE')
+            } else if (args.where.status) {
+              products = products.filter(p => p.status === args.where.status)
+            }
             if (args?.where?.categoryId) products = products.filter(p => p.categoryId === args.where.categoryId)
             if (args?.where?.sellerId) products = products.filter(p => p.sellerId === args.where.sellerId)
             if (args?.where?.OR) {
@@ -69,17 +92,32 @@ export function createDemoPrismaClient(realPrisma: any) {
             return getDemoProductById(p.id)
           },
           count: async (args: any) => {
-            let products = demoProducts.filter(p => p.status === 'ACTIVE')
+            let products = [...demoProducts]
+            if (args?.where?.status) {
+              products = products.filter(p => p.status === args.where.status)
+            } else {
+              products = products.filter(p => p.status === 'ACTIVE')
+            }
             if (args?.where?.categoryId) products = products.filter(p => p.categoryId === args.where.categoryId)
             return products.length
           },
           create: async (args: any) => {
             const newId = `prod-${Date.now()}`
-            demoProducts.unshift({ id: newId, ...args.data, status: 'ACTIVE', createdAt: new Date(), updatedAt: new Date() } as any)
+            demoProducts.unshift({ id: newId, ...args.data, status: 'ACTIVE', featured: false, createdAt: new Date(), updatedAt: new Date() } as any)
             return getDemoProductById(newId)!
           },
-          update: async (args: any) => { return getDemoProductById(args.where.id) || null },
-          delete: async () => ({ id: 'deleted' }),
+          update: async (args: any) => {
+            const product = demoProducts.find(p => p.id === args.where.id)
+            if (!product) return null
+            Object.assign(product, args.data)
+            product.updatedAt = new Date()
+            return getDemoProductById(product.id)!
+          },
+          delete: async (args: any) => {
+            const idx = demoProducts.findIndex(p => p.id === args.where.id)
+            if (idx > -1) demoProducts.splice(idx, 1)
+            return { id: args.where.id || 'deleted' }
+          },
         },
         rFQ: {
           findMany: async (args: any) => {
@@ -106,15 +144,65 @@ export function createDemoPrismaClient(realPrisma: any) {
         },
         order: {
           create: async () => ({ id: `ord-${Date.now()}`, status: 'CREATED' }),
-          findMany: async () => [],
+          findMany: async (args: any) => {
+            let orders = [...demoOrders]
+            if (args?.where?.status) orders = orders.filter(o => o.status === args.where.status)
+            if (args?.where?.buyerId) orders = orders.filter(o => o.buyerId === args.where.buyerId)
+            if (args?.where?.sellerId) orders = orders.filter(o => o.sellerId === args.where.sellerId)
+            // Sort by newest first
+            orders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            const sliced = orders.slice(args?.skip || 0, (args?.skip || 0) + (args?.take || 50))
+            return sliced.map(o => {
+              const product = getDemoProductById(o.productId)
+              const buyer = getDemoUserById(o.buyerId)
+              const seller = getDemoUserById(o.sellerId)
+              return { ...o, product, buyer, seller, payment: null, shipment: null }
+            })
+          },
+          findUnique: async (args: any) => {
+            const order = demoOrders.find(o => o.id === args?.where?.id)
+            if (!order) return null
+            return { ...order, product: getDemoProductById(order.productId), buyer: getDemoUserById(order.buyerId), seller: getDemoUserById(order.sellerId), payment: null, shipment: null }
+          },
+          count: async (args: any) => {
+            let orders = [...demoOrders]
+            if (args?.where?.status) orders = orders.filter(o => o.status === args.where.status)
+            return orders.length
+          },
+          update: async (args: any) => {
+            const order = demoOrders.find(o => o.id === args.where.id)
+            if (!order) return null
+            Object.assign(order, args.data)
+            return order
+          },
         },
         user: {
-          findMany: async () => demoUsers,
-          findUnique: async (args: any) => {
-            const u = demoUsers.find(u => u.id === args?.where?.id)
-            return u || demoUsers[0]
+          findMany: async (args: any) => {
+            return [...demoUsers]
           },
-          create: async (args: any) => ({ id: `user-${Date.now()}`, ...args.data }),
+          findUnique: async (args: any) => {
+            const u = demoUsers.find(u => u.id === args?.where?.id || u.email === args?.where?.email)
+            return u || null
+          },
+          create: async (args: any) => {
+            const newUser = { id: `user-${Date.now()}`, ...args.data, status: 'ACTIVE', createdAt: new Date() }
+            demoUsers.unshift(newUser as any)
+            return newUser
+          },
+          update: async (args: any) => {
+            const idx = demoUsers.findIndex(u => u.id === args.where.id)
+            if (idx === -1) return null
+            Object.assign(demoUsers[idx], args.data)
+            return demoUsers[idx]
+          },
+          delete: async (args: any) => {
+            const idx = demoUsers.findIndex(u => u.id === args.where.id)
+            if (idx > -1) demoUsers.splice(idx, 1)
+            return { id: args.where.id || 'deleted' }
+          },
+          count: async (args: any) => {
+            return demoUsers.length
+          },
         },
         wishlistItem: {
           findMany: async () => demoProducts.slice(0, 3).map(p => ({ id: `wl-${p.id}`, userId: 'user-1', productId: p.id, createdAt: new Date(), product: getDemoProductById(p.id) })),
@@ -135,6 +223,10 @@ export function createDemoPrismaClient(realPrisma: any) {
         payment: {
           create: async () => ({ id: `pay-1`, stripePaymentIntentId: `pi_demo` }),
           update: async () => ({}),
+          aggregate: async (args: any) => {
+            if (args?._sum?.amount) return { _sum: { amount: 0 } }
+            return { _sum: { amount: 0 } }
+          },
         },
         shipment: {
           create: async () => ({ id: `ship-1` }),
@@ -155,8 +247,10 @@ export function createDemoPrismaClient(realPrisma: any) {
               if (method === 'findMany') return []
               if (method === 'findUnique') return null
               if (method === 'count') return 0
+              if (method === 'aggregate') return { _sum: { amount: 0 }, _count: 0 }
               if (method === 'create') return args[0]?.data || {}
               if (method === 'update') return {}
+              if (method === 'delete') return {}
               return {}
             }
             return target[model][method](...args)
