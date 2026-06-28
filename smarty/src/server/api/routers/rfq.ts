@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure } from '../trpc'
+import { sendNotification } from '@/server/sse'
 
 const rfqWithIncludes = {
   id: true,
@@ -319,6 +320,19 @@ export const rfqRouter = router({
           status: 'PENDING',
         },
         include: rfqOfferWithIncludes,
+      }).then(async (offer) => {
+        // Notify the buyer in real time
+        sendNotification(rfq.buyerId, {
+          type: 'RFQ_OFFER_RECEIVED',
+          title: 'Oferta la cererea ta',
+          message: `Ai primit o oferta de ${input.amount.toFixed(2)} RON pentru "${rfq.title}"`,
+          link: `/cereri/${input.rfqId}`,
+          metadata: { rfqId: input.rfqId, offerId: offer.id },
+        }).catch(() => {
+          /* fire-and-forget: notification failure must not break the mutation */
+        })
+
+        return offer
       })
     }),
 

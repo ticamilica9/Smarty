@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure } from '../trpc'
+import { sendNotification } from '@/server/sse'
 
 const offerWithIncludes = {
   id: true,
@@ -98,7 +99,7 @@ export const offerRouter = router({
       // Create offer with 48h expiry
       const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000)
 
-      return ctx.prisma.offer.create({
+      const offer = await ctx.prisma.offer.create({
         data: {
           productId: input.productId,
           buyerId: userId,
@@ -109,6 +110,19 @@ export const offerRouter = router({
         },
         include: offerWithIncludes,
       })
+
+      // Notify the seller in real time
+      sendNotification(product.sellerId, {
+        type: 'OFFER_RECEIVED',
+        title: 'Oferta noua',
+        message: `Ai primit o oferta de ${input.amount.toFixed(2)} RON pentru "${product.title}"`,
+        link: '/cont/oferte',
+        metadata: { productId: input.productId, offerId: offer.id },
+      }).catch(() => {
+        /* fire-and-forget: notification failure must not break the mutation */
+      })
+
+      return offer
     }),
 
   /**

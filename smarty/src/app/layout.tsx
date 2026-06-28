@@ -4,6 +4,8 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { CartProvider } from "@/components/cart/cart-provider";
+import { NotificationProvider } from "@/components/notifications/notification-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +34,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <TRPCProvider><SessionProvider><CartProvider>{children}</CartProvider></SessionProvider></TRPCProvider>
+        <TRPCProvider><SessionProvider><CartProvider><NotificationProvider>{children}</NotificationProvider></CartProvider></SessionProvider></TRPCProvider>
+        <Toaster />
       </body>
     </html>
   );
