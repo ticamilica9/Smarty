@@ -32,19 +32,18 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-            Gasesti ce iti doresti, la pretul potrivit
+            Descoperă beauty la prețul corect
           </h1>
-          <p className="mt-6 text-lg text-white/80 sm:text-xl">
-            Smarty este platforma unde cumperi si vinzi produse cosmetice, haine
-            si accesorii — noi sau second-hand, la alegere.
+          <p className="mt-6 text-lg text-white/80 sm:text-xl max-w-2xl mx-auto leading-relaxed">
+            Smarty este marketplace-ul premium pentru produse cosmetice, de îngrijire și parfumuri autentice — cumpără și vinde produse noi, verificate, la prețuri corecte.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link href="/categorii">
               <Button
                 size="lg"
-                className="bg-white text-primary hover:bg-white/90"
+                className="bg-white text-[#A8466B] hover:bg-white/95 shadow-lg shadow-black/20"
               >
-                Exploreaza produse
+                Explorează produse
                 <ArrowRight className="ml-1.5 size-4" />
               </Button>
             </Link>
@@ -52,9 +51,9 @@ export default async function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-white/30 text-white hover:bg-white/10 hover:text-white"
+                className="border-2 border-white/70 text-white bg-white/10 hover:bg-white/20 hover:border-white font-medium shadow-lg shadow-black/10"
               >
-                Posteaza o cerere
+                Postează o cerere
               </Button>
             </Link>
           </div>
