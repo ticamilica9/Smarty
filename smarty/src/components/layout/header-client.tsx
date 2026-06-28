@@ -74,7 +74,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Mobile menu trigger */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger className="lg:hidden">
+          <SheetTrigger asChild className="lg:hidden">
             <Button variant="ghost" size="icon" aria-label="Meniu">
               <MenuIcon className="size-5" />
             </Button>
@@ -85,7 +85,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
             </SheetHeader>
             <nav className="flex flex-col gap-1 p-3">
               {navLinks.map((link) => (
-                <SheetClose key={link.href}>
+                <SheetClose key={link.href} asChild>
                   <Link
                     href={link.href}
                     className={cn(
@@ -103,7 +103,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
               <Separator className="my-2" />
               {user ? (
                 <>
-                  <SheetClose>
+                  <SheetClose asChild>
                     <Link
                       href="/cont/produse/nou"
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
@@ -111,7 +111,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                       + Vinde
                     </Link>
                   </SheetClose>
-                  <SheetClose>
+                  <SheetClose asChild>
                     <Link
                       href="/cont"
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
@@ -120,7 +120,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                       Contul meu
                     </Link>
                   </SheetClose>
-                  <SheetClose>
+                  <SheetClose asChild>
                     <Link
                       href="/cont/comenzi"
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
@@ -129,7 +129,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
                       Comenzile mele
                     </Link>
                   </SheetClose>
-                  <SheetClose>
+                  <SheetClose asChild>
                     <Link
                       href="/cont/dorinte"
                       className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
@@ -141,18 +141,14 @@ export function HeaderClient({ user }: HeaderClientProps) {
                 </>
               ) : (
                 <>
-                  <SheetClose>
-                    <Link href="/login" onClick={() => setMobileOpen(false)}>
-                      <Button variant="default" className="w-full">
-                        Intra in cont
-                      </Button>
+                  <SheetClose asChild>
+                    <Link href="/login" onClick={() => setMobileOpen(false)} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-10 px-4 py-2 w-full">
+                      Intra in cont
                     </Link>
                   </SheetClose>
-                  <SheetClose>
-                    <Link href="/inregistrare" onClick={() => setMobileOpen(false)}>
-                      <Button variant="outline" className="w-full">
-                        Creeaza cont
-                      </Button>
+                  <SheetClose asChild>
+                    <Link href="/inregistrare" onClick={() => setMobileOpen(false)} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
+                      Creeaza cont
                     </Link>
                   </SheetClose>
                 </>
@@ -213,7 +209,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
         <div className="flex items-center gap-2">
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   className="flex items-center gap-2 px-2"
