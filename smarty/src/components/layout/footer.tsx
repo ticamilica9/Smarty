@@ -4,25 +4,25 @@ const footerColumns = [
   {
     title: "Smarty",
     links: [
-      { label: "Despre noi", href: "/despre" },
-      { label: "Contact", href: "/contact" },
+      { label: "Despre noi", href: "/pagini/despre" },
+      { label: "Contact", href: "/pagini/contact" },
       { label: "Blog", href: "/blog" },
     ],
   },
   {
-    title: "Cumparaturi",
+    title: "Cumpărături",
     links: [
-      { label: "Makeup", href: "/categorii/makeup" },
-      { label: "Ingrijire", href: "/categorii/ingrijire" },
-      { label: "Haine", href: "/categorii/haine" },
+      { label: "Machiaj", href: "/categorii/machiaj" },
+      { label: "Îngrijire", href: "/categorii/ingrijire" },
+      { label: "Parfumuri", href: "/categorii/parfumuri" },
     ],
   },
   {
     title: "Ajutor",
     links: [
-      { label: "Cum functioneaza", href: "/ajutor/cum-functioneaza" },
-      { label: "Termeni si conditii", href: "/legal/termeni" },
-      { label: "Politica de retur", href: "/legal/retur" },
+      { label: "Cum funcționează", href: "/pagini/cum-functioneaza" },
+      { label: "Termeni și condiții", href: "/pagini/termeni" },
+      { label: "Politica de retur", href: "/pagini/politica-retur" },
     ],
   },
 ]
@@ -65,9 +65,20 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t pt-6">
-          <p className="text-center text-xs text-muted-foreground">
-            &copy; 2026 Smarty Marketplace. Toate drepturile rezervate.
+        <div className="mt-10 border-t pt-6 text-center text-xs text-muted-foreground">
+          <p>&copy; 2026 Smarty Marketplace. Toate drepturile rezervate.</p>
+          <p className="mt-2">
+            <Link href="/pagini/termeni" className="underline underline-offset-2 hover:text-foreground">
+              Politica de confidențialitate (GDPR)
+            </Link>
+            <span className="mx-2">|</span>
+            <Link href="/pagini/termeni" className="underline underline-offset-2 hover:text-foreground">
+              Termeni și condiții
+            </Link>
+            <span className="mx-2">|</span>
+            <Link href="/pagini/politica-retur" className="underline underline-offset-2 hover:text-foreground">
+              Cookie-uri
+            </Link>
           </p>
         </div>
       </div>

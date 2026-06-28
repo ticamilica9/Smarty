@@ -46,8 +46,10 @@ interface HeaderClientProps {
 }
 
 const navLinks = [
-  { label: "Acasa", href: "/" },
-  { label: "Categorii", href: "/categorii" },
+  { label: "Acasă", href: "/" },
+  { label: "Machiaj", href: "/categorii/machiaj" },
+  { label: "Îngrijire", href: "/categorii/ingrijire" },
+  { label: "Parfumuri", href: "/categorii/parfumuri" },
   { label: "Oferte", href: "/oferte" },
   { label: "Cereri", href: "/cereri" },
   { label: "RFQ-uri", href: "/rfq-uri" },
