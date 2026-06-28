@@ -14,7 +14,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetClose,
 } from "@/components/ui/sheet"
 import {
   DropdownMenu,
@@ -74,10 +73,8 @@ export function HeaderClient({ user }: HeaderClientProps) {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Mobile menu trigger */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon" aria-label="Meniu">
-              <MenuIcon className="size-5" />
-            </Button>
+          <SheetTrigger className="lg:hidden inline-flex items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground h-10 w-10">
+            <MenuIcon className="size-5" />
           </SheetTrigger>
           <SheetContent side="left" className="w-72 p-0">
             <SheetHeader className="border-b px-4 py-4">
@@ -85,72 +82,63 @@ export function HeaderClient({ user }: HeaderClientProps) {
             </SheetHeader>
             <nav className="flex flex-col gap-1 p-3">
               {navLinks.map((link) => (
-                <SheetClose key={link.href} asChild>
-                  <Link
-                    href={link.href}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
-                      pathname === link.href
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground"
-                    )}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                </SheetClose>
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
+                    pathname === link.href
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </Link>
               ))}
               <Separator className="my-2" />
               {user ? (
                 <>
-                  <SheetClose asChild>
-                    <Link
-                      href="/cont/produse/nou"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-                    >
-                      + Vinde
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link
-                      href="/cont"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-                    >
-                      <UserIcon className="size-4" />
-                      Contul meu
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link
-                      href="/cont/comenzi"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-                    >
-                      <ShoppingBagIcon className="size-4" />
-                      Comenzile mele
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link
-                      href="/cont/dorinte"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
-                    >
-                      <HeartIcon className="size-4" />
-                      Lista de dorinte
-                    </Link>
-                  </SheetClose>
+                  <Link
+                    href="/cont/produse/nou"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    + Vinde
+                  </Link>
+                  <Link
+                    href="/cont"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <UserIcon className="size-4" />
+                    Contul meu
+                  </Link>
+                  <Link
+                    href="/cont/comenzi"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <ShoppingBagIcon className="size-4" />
+                    Comenzile mele
+                  </Link>
+                  <Link
+                    href="/cont/dorinte"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <HeartIcon className="size-4" />
+                    Lista de dorinte
+                  </Link>
                 </>
               ) : (
                 <>
-                  <SheetClose asChild>
-                    <Link href="/login" onClick={() => setMobileOpen(false)} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-10 px-4 py-2 w-full">
-                      Intra in cont
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link href="/inregistrare" onClick={() => setMobileOpen(false)} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
-                      Creeaza cont
-                    </Link>
-                  </SheetClose>
+                  <Link href="/login" onClick={() => setMobileOpen(false)} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 h-10 px-4 py-2 w-full">
+                    Intra in cont
+                  </Link>
+                  <Link href="/inregistrare" onClick={() => setMobileOpen(false)} className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full">
+                    Creeaza cont
+                  </Link>
                 </>
               )}
             </nav>
@@ -209,22 +197,17 @@ export function HeaderClient({ user }: HeaderClientProps) {
         <div className="flex items-center gap-2">
           {user ? (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 px-2"
-                >
-                  <Avatar className="size-8">
-                    {user.image ? (
-                      <AvatarImage src={user.image} alt={user.name ?? ""} />
-                    ) : null}
-                    <AvatarFallback>{initials}</AvatarFallback>
-                  </Avatar>
-                  <span className="hidden text-sm font-medium lg:inline">
-                    {user.name ?? "Utilizator"}
-                  </span>
-                  <ChevronDownIcon className="hidden size-3.5 text-muted-foreground lg:block" />
-                </Button>
+              <DropdownMenuTrigger className="flex items-center gap-2 px-2 rounded-md hover:bg-accent hover:text-accent-foreground h-10">
+                <Avatar className="size-8">
+                  {user.image ? (
+                    <AvatarImage src={user.image} alt={user.name ?? ""} />
+                  ) : null}
+                  <AvatarFallback>{initials}</AvatarFallback>
+                </Avatar>
+                <span className="hidden text-sm font-medium lg:inline">
+                  {user.name ?? "Utilizator"}
+                </span>
+                <ChevronDownIcon className="hidden size-3.5 text-muted-foreground lg:block" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">

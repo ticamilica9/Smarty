@@ -4,16 +4,6 @@ import { router, publicProcedure, protectedProcedure } from '../trpc'
 import { sendNotification } from '@/server/sse'
 
 const rfqWithIncludes = {
-  id: true,
-  buyerId: true,
-  title: true,
-  description: true,
-  categoryId: true,
-  maxBudget: true,
-  expiresAt: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
   buyer: {
     select: { id: true, name: true, image: true, sellerRating: true },
   },
@@ -24,14 +14,6 @@ const rfqWithIncludes = {
 } as const
 
 const rfqOfferWithIncludes = {
-  id: true,
-  rfqId: true,
-  sellerId: true,
-  productId: true,
-  amount: true,
-  message: true,
-  status: true,
-  createdAt: true,
   seller: {
     select: { id: true, name: true, image: true, sellerRating: true },
   },
@@ -41,16 +23,6 @@ const rfqOfferWithIncludes = {
 } as const
 
 const rfqDetailIncludes = {
-  id: true,
-  buyerId: true,
-  title: true,
-  description: true,
-  categoryId: true,
-  maxBudget: true,
-  expiresAt: true,
-  status: true,
-  createdAt: true,
-  updatedAt: true,
   buyer: {
     select: { id: true, name: true, image: true, sellerRating: true },
   },
@@ -60,14 +32,6 @@ const rfqDetailIncludes = {
   _count: { select: { offers: true } },
   offers: {
     include: {
-      id: true,
-      rfqId: true,
-      sellerId: true,
-      productId: true,
-      amount: true,
-      message: true,
-      status: true,
-      createdAt: true,
       seller: {
         select: { id: true, name: true, image: true, sellerRating: true },
       },
