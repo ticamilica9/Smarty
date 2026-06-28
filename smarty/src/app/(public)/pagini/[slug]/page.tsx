@@ -100,28 +100,46 @@ export default async function PaginaPage({ params }: PaginaProps) {
 
 function DespreContent() {
   return (
-    <>
-      <p className="lead text-lg text-muted-foreground">
-        Smarty este un marketplace dedicat produselor cosmetice, de îngrijire și parfumurilor.
+    <div className="not-prose space-y-10">
+      {/* Hero intro */}
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-secondary/30 p-8">
+        <p className="text-xl font-semibold text-foreground leading-relaxed">
+          Smarty este un marketplace dedicat <span className="text-primary">produselor cosmetice</span>, <span className="text-primary">de îngrijire</span> și <span className="text-primary">parfumurilor</span>.
+        </p>
+        <p className="mt-4 text-muted-foreground leading-relaxed">
+          Misiunea noastră este să oferim o platformă sigură și elegantă unde pasionații de beauty pot cumpăra și vinde produse autentice. Credem că frumusețea ar trebui să fie accesibilă tuturor, iar produsele beauty prea puțin folosite merită o a doua șansă.
+        </p>
+      </div>
+
+      {/* Community */}
+      <p className="text-muted-foreground leading-relaxed">
+        Pe Smarty, vei găsi o comunitate de beauty entuziaști care împărtășesc aceeași pasiune pentru produse cosmetice de calitate. Fie că ești în căutarea unui ruj de ediție limitată, a unui parfum iconic sau a unui serum de îngrijire, cu siguranță vei găsi ceva special.
       </p>
-      <p>
-        Misiunea noastră este să oferim o platformă sigură și elegantă unde pasionații de beauty
-        pot cumpăra și vinde produse autentice. Credem că frumusețea ar trebui să fie accesibilă
-        tuturor, iar produsele beauty prea puțin folosite merită o a doua șansă.
-      </p>
-      <p>
-        Pe Smarty, vei găsi o comunitate de beauty entuziaști care împărtășesc aceeași pasiune
-        pentru produse cosmetice de calitate. Fie că ești în căutarea unui ruj de ediție limitată,
-        a unui parfum iconic sau a unui serum de îngrijire, cu siguranță vei găsi ceva special.
-      </p>
-      <h2>De ce Smarty?</h2>
-      <ul>
-        <li><strong>Autenticitate garantată</strong> — toate produsele sunt verificate de comunitate</li>
-        <li><strong>Prețuri corecte</strong> — produse premium la prețuri accesibile</li>
-        <li><strong>Comunitate activă</strong> — peste 10.000 de membri activi</li>
-        <li><strong>Plată sigură</strong> — tranzacții protejate prin platformă</li>
-      </ul>
-    </>
+
+      {/* Why Smarty */}
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-6">
+          <span className="text-2xl">✨</span>
+          <h2 className="text-xl font-semibold">De ce Smarty?</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { icon: "🔒", title: "Autenticitate garantată", desc: "Toate produsele sunt verificate de comunitatea noastră pentru a asigura autenticitatea" },
+            { icon: "💰", title: "Prețuri corecte", desc: "Produse premium la prețuri accesibile, direct de la pasionați ca tine" },
+            { icon: "👥", title: "Comunitate activă", desc: "Peste 10.000 de membri care împărtășesc aceeași pasiune pentru beauty" },
+            { icon: "🛡️", title: "Plată sigură", desc: "Tranzacțiile tale sunt protejate prin platforma noastră de escrow" },
+          ].map((item) => (
+            <div key={item.title} className="flex gap-3 rounded-lg bg-muted/40 p-4">
+              <span className="text-2xl shrink-0">{item.icon}</span>
+              <div>
+                <p className="font-semibold text-sm">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
