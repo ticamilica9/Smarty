@@ -246,7 +246,7 @@ export const offerRouter = router({
             include: offerWithIncludes,
           })
 
-          // Create an Order record (basic, full order flow in Task 13)
+          // Create an Order record (payment happens later via checkout)
           await tx.order.create({
             data: {
               buyerId: offer.buyerId,
@@ -258,12 +258,7 @@ export const offerRouter = router({
             },
           })
 
-          // Mark product as SOLD
-          await tx.product.update({
-            where: { id: offer.productId },
-            data: { status: 'SOLD' },
-          })
-
+          // Product stays ACTIVE — marked SOLD only after payment (PAID status)
           return updated
         })
 
@@ -336,7 +331,7 @@ export const offerRouter = router({
             include: offerWithIncludes,
           })
 
-          // Create an Order record
+          // Create an Order record (payment happens later via checkout)
           await tx.order.create({
             data: {
               buyerId: offer.buyerId,
@@ -348,12 +343,7 @@ export const offerRouter = router({
             },
           })
 
-          // Mark product as SOLD
-          await tx.product.update({
-            where: { id: offer.productId },
-            data: { status: 'SOLD' },
-          })
-
+          // Product stays ACTIVE — marked SOLD only after payment (PAID status)
           return updated
         })
 

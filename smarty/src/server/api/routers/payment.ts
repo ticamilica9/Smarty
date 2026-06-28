@@ -2,11 +2,9 @@ import { z } from "zod"
 import { TRPCError } from "@trpc/server"
 import { router, protectedProcedure } from "../trpc"
 import {
-  stripe,
   createStripeAccount,
   createAccountLink,
   createPaymentIntent,
-  releaseEscrow,
 } from "@/server/stripe"
 
 export const paymentRouter = router({
@@ -22,6 +20,10 @@ export const paymentRouter = router({
           z.object({
             productId: z.string().min(1),
             quantity: z.number().int().positive(),
+            /** Optional amount override (e.g. for offer-based purchases) */
+            amount: z.number().positive().optional(),
+            /** If present, use the existing order created at offer acceptance */
+            offerId: z.string().optional(),
           }),
         ),
       }),
@@ -29,7 +31,66 @@ export const paymentRouter = router({
     .mutation(async ({ ctx, input }) => {
       const userId = (ctx.user as { id: string }).id
 
-      // Fetch all products with their sellers
+      // Offer-based checkout: use existing order from offer acceptance
+      const offerItem = input.items[0]
+      if (offerItem?.offerId) {
+        // Find the existing order associated with this offer
+        const existingOrder = await ctx.prisma.order.findFirst({
+          where: {
+            offerId: offerItem.offerId,
+            buyerId: userId,
+            status: "CREATED",
+          },
+          include: {
+            product: { select: { title: true } },
+            seller: { select: { stripeConnectId: true } },
+          },
+        })
+
+        if (!existingOrder) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comanda asociata ofertei nu a fost gasita",
+          })
+        }
+
+        if (!existingOrder.seller.stripeConnectId) {
+          return {
+            payments: [
+              {
+                orderId: existingOrder.id,
+                clientSecret: null,
+                paymentIntentId: null,
+                amount: existingOrder.amount,
+                productTitle: existingOrder.product.title,
+                error: "Vanzatorul nu are un cont Stripe conectat",
+              },
+            ],
+          }
+        }
+
+        // Create PaymentIntent for the existing order
+        const payment = await createPaymentIntent({
+          amount: existingOrder.amount,
+          stripeConnectId: existingOrder.seller.stripeConnectId,
+          orderId: existingOrder.id,
+          buyerId: userId,
+        })
+
+        return {
+          payments: [
+            {
+              orderId: existingOrder.id,
+              clientSecret: payment.clientSecret,
+              paymentIntentId: payment.paymentIntentId,
+              amount: existingOrder.amount,
+              productTitle: existingOrder.product.title,
+            },
+          ],
+        }
+      }
+
+      // Regular cart-based checkout: fetch all products with their sellers
       const products = await ctx.prisma.product.findMany({
         where: {
           id: { in: input.items.map((i) => i.productId) },
@@ -66,13 +127,15 @@ export const paymentRouter = router({
         if (!item) continue
 
         const existing = sellerGroups.get(product.sellerId)
-        const lineTotal = product.price * item.quantity
+        // Use the provided amount override, otherwise fall back to product price
+        const unitPrice = item.amount ?? product.price
+        const lineTotal = unitPrice * item.quantity
 
         if (existing) {
           existing.items.push({
             productId: product.id,
             quantity: item.quantity,
-            price: product.price,
+            price: unitPrice,
             title: product.title,
           })
           existing.total += lineTotal
@@ -85,7 +148,7 @@ export const paymentRouter = router({
               {
                 productId: product.id,
                 quantity: item.quantity,
-                price: product.price,
+                price: unitPrice,
                 title: product.title,
               },
             ],
@@ -184,68 +247,6 @@ export const paymentRouter = router({
       }
 
       return { payments: paymentResults }
-    }),
-
-  /**
-   * Confirm delivery and release escrow funds to seller.
-   * Called by the buyer after receiving the item.
-   */
-  confirm: protectedProcedure
-    .input(z.object({ orderId: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      const userId = (ctx.user as { id: string }).id
-
-      // Fetch the order and verify it belongs to the current user
-      const order = await ctx.prisma.order.findUnique({
-        where: { id: input.orderId },
-        include: { payment: true },
-      })
-
-      if (!order) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Comanda nu a fost gasita",
-        })
-      }
-
-      if (order.buyerId !== userId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Aceasta comanda nu iti apartine",
-        })
-      }
-
-      if (order.status !== "PAID" && order.status !== "CREATED") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Comanda nu poate fi confirmata",
-        })
-      }
-
-      if (!order.payment?.stripePaymentIntentId) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Nu exista o plata pentru aceasta comanda",
-        })
-      }
-
-      if (order.payment.status !== "HELD") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Plata nu mai este in escrow",
-        })
-      }
-
-      // Release escrow: capture the PaymentIntent
-      await releaseEscrow(order.payment.stripePaymentIntentId)
-
-      // Update order status
-      await ctx.prisma.order.update({
-        where: { id: input.orderId },
-        data: { status: "DELIVERED" },
-      })
-
-      return { success: true }
     }),
 
   /**

@@ -34,22 +34,21 @@ export async function POST(req: Request) {
           break
         }
 
-        // Update payment status to RELEASED (it was captured)
+        // With manual capture, this fires at authorization — funds are HELD, not released
         await prisma.payment.update({
           where: { stripePaymentIntentId: paymentIntent.id },
           data: {
-            status: "RELEASED",
-            escrowReleasedAt: new Date(),
+            status: "HELD",
           },
         })
 
-        // Update order status to DELIVERED
+        // Update order status to PAID
         await prisma.order.update({
           where: { id: orderId },
-          data: { status: "DELIVERED" },
+          data: { status: "PAID" },
         })
 
-        console.log(`Payment released for order ${orderId}`)
+        console.log(`Payment held for order ${orderId}`)
         break
       }
 

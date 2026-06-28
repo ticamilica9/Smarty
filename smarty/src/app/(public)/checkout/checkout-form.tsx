@@ -45,6 +45,8 @@ const stripePromise = loadStripe(
 
 interface CheckoutFormProps {
   userId: string
+  productId?: string
+  offerId?: string
 }
 
 type ShippingMethod = "courier" | "easybox"
@@ -71,30 +73,26 @@ interface PaymentInfo {
 
 /**
  * Inner payment form that uses Stripe Elements.
- * Handles confirming a single PaymentIntent.
+ * Handles confirming a single PaymentIntent (MVP: one-at-a-time).
  */
 function PaymentForm({
-  payments,
+  payment,
   onSuccess,
   onError,
 }: {
-  payments: PaymentInfo[]
+  payment: PaymentInfo
   onSuccess: () => void
   onError: (message: string) => void
 }) {
   const stripe = useStripe()
   const elements = useElements()
   const [isPaying, setIsPaying] = useState(false)
-  const [currentIndex, setCurrentIndex] = useState(0)
-
-  const currentPayment = payments[currentIndex]
-  const isLastPayment = currentIndex === payments.length - 1
 
   const handlePay = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
 
-      if (!stripe || !elements || !currentPayment?.clientSecret) return
+      if (!stripe || !elements || !payment.clientSecret) return
 
       setIsPaying(true)
 
@@ -107,7 +105,7 @@ function PaymentForm({
 
       const { error: confirmError } = await stripe.confirmPayment({
         elements,
-        clientSecret: currentPayment.clientSecret,
+        clientSecret: payment.clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/checkout`,
         },
@@ -120,22 +118,16 @@ function PaymentForm({
         return
       }
 
-      // Payment succeeded for this intent
-      if (isLastPayment) {
-        onSuccess()
-      } else {
-        // Move to next payment
-        setCurrentIndex((i) => i + 1)
-        setIsPaying(false)
-      }
+      // Payment succeeded
+      onSuccess()
     },
-    [stripe, elements, currentPayment, isLastPayment, onSuccess, onError],
+    [stripe, elements, payment, onSuccess, onError],
   )
 
-  if (!currentPayment) {
+  if (!payment.clientSecret) {
     return (
       <div className="py-8 text-center text-muted-foreground">
-        Nu exista plati de procesat
+        {payment.error ?? "Nu exista plati de procesat"}
       </div>
     )
   }
@@ -147,27 +139,22 @@ function PaymentForm({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">
-                Comanda #{currentPayment.orderId.slice(0, 8)}
+                Comanda #{payment.orderId.slice(0, 8)}
               </p>
               <p className="text-sm font-medium">
-                {currentPayment.productTitle}
+                {payment.productTitle}
               </p>
             </div>
             <p className="text-lg font-semibold tabular-nums">
-              {formatRON(currentPayment.amount)}
+              {formatRON(payment.amount)}
             </p>
           </div>
-          {payments.length > 1 && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Plata {currentIndex + 1} din {payments.length}
-            </p>
-          )}
         </div>
 
         <PaymentElement />
 
-        {currentPayment.error && (
-          <p className="text-sm text-destructive">{currentPayment.error}</p>
+        {payment.error && (
+          <p className="text-sm text-destructive">{payment.error}</p>
         )}
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -182,16 +169,16 @@ function PaymentForm({
         >
           {isPaying
             ? "Se proceseaza..."
-            : `Plateste ${formatRON(currentPayment.amount)}`}
+            : `Plateste ${formatRON(payment.amount)}`}
         </Button>
       </div>
     </form>
   )
 }
 
-export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
+export function CheckoutForm({ userId: _userId, productId, offerId }: CheckoutFormProps) {
   const router = useRouter()
-  const { items, totalItems, totalPrice, clearCart } = useCart()
+  const { items, totalItems, removeItem, clearCart } = useCart()
   const [step, setStep] = useState<CheckoutStep>("form")
   const [formData, setFormData] = useState<FormData>({
     city: "",
@@ -210,34 +197,74 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  // Determine cart item to purchase (single-item MVP: take items[0])
+  const cartItem = items.length > 0 ? items[0] : null
+
+  const isOfferCheckout = !!(productId && offerId)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setStep("processing")
     setErrorMessage(null)
 
     try {
-      const result = await createIntent.mutateAsync({
-        items: items.map((i) => ({
-          productId: i.productId,
-          quantity: i.quantity,
-        })),
-      })
+      if (isOfferCheckout) {
+        // Offer-based checkout: use offerId to find existing order
+        const result = await createIntent.mutateAsync({
+          items: [
+            {
+              productId,
+              quantity: 1,
+              offerId,
+            },
+          ],
+        })
 
-      const validPayments = result.payments.filter(
-        (p): p is typeof p & { clientSecret: string } => p.clientSecret !== null,
-      )
-
-      if (validPayments.length === 0) {
-        setErrorMessage(
-          result.payments[0]?.error ??
-            "Nu s-au putut crea platile. Vanzatorul nu are un cont Stripe conectat.",
+        const validPayments = result.payments.filter(
+          (p): p is typeof p & { clientSecret: string } => p.clientSecret !== null,
         )
-        setStep("error")
-        return
-      }
 
-      setPayments(validPayments)
-      setStep("payment")
+        if (validPayments.length === 0) {
+          setErrorMessage(
+            result.payments[0]?.error ??
+              "Nu s-a putut crea plata. Vanzatorul nu are un cont Stripe conectat.",
+          )
+          setStep("error")
+          return
+        }
+
+        setPayments(validPayments)
+        setStep("payment")
+      } else if (cartItem) {
+        // Regular cart checkout: use first item only (MVP single-item)
+        const result = await createIntent.mutateAsync({
+          items: [
+            {
+              productId: cartItem.productId,
+              quantity: cartItem.quantity,
+            },
+          ],
+        })
+
+        const validPayments = result.payments.filter(
+          (p): p is typeof p & { clientSecret: string } => p.clientSecret !== null,
+        )
+
+        if (validPayments.length === 0) {
+          setErrorMessage(
+            result.payments[0]?.error ??
+              "Nu s-a putut crea plata. Vanzatorul nu are un cont Stripe conectat.",
+          )
+          setStep("error")
+          return
+        }
+
+        setPayments(validPayments)
+        setStep("payment")
+      } else {
+        setErrorMessage("Cosul tau este gol")
+        setStep("error")
+      }
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "A aparut o eroare la procesarea comenzii"
@@ -247,9 +274,12 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
   }
 
   const handlePaymentSuccess = useCallback(() => {
-    clearCart()
+    if (cartItem && !isOfferCheckout) {
+      // Remove only the purchased item (not clear everything)
+      removeItem(cartItem.productId)
+    }
     setStep("success")
-  }, [clearCart])
+  }, [cartItem, isOfferCheckout, removeItem])
 
   const handlePaymentError = useCallback(
     (message: string) => {
@@ -260,14 +290,14 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
   )
 
   // Find the client secret for the Elements provider
-  const activeClientSecret = payments[0]?.clientSecret
+  const activePayment = payments[0]
 
-  // Empty cart state
-  if (items.length === 0 && step !== "success") {
+  // Empty cart state (only for non-offer checkout)
+  if (!isOfferCheckout && items.length === 0 && step !== "success") {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
         <ShoppingCartIcon className="size-16 text-muted-foreground/40" />
-        <h2 className="text-xl font-semibold">Cosul tau este gol</h2>
+        <h2 className="text-xl font-semibold">Cosul gol</h2>
         <p className="text-muted-foreground">
           Adauga produse inainte de a finaliza comanda.
         </p>
@@ -280,6 +310,7 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
 
   // Success state
   if (step === "success") {
+    const orderId = activePayment?.orderId
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
         <div className="flex size-16 items-center justify-center rounded-full bg-green-100">
@@ -291,9 +322,15 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
           procesa comanda in curand.
         </p>
         <div className="flex gap-3">
-          <Link href="/cont/comenzi">
-            <Button>Vezi comenzile mele</Button>
-          </Link>
+          {orderId ? (
+            <Link href={`/comenzi/${orderId}`}>
+              <Button>Vezi comanda</Button>
+            </Link>
+          ) : (
+            <Link href="/cont/comenzi">
+              <Button>Vezi comenzile mele</Button>
+            </Link>
+          )}
           <Link href="/categorii">
             <Button variant="outline">Continua cumparaturile</Button>
           </Link>
@@ -315,18 +352,20 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
         </p>
         <div className="flex gap-3">
           <Button onClick={() => setStep("form")}>Incearca din nou</Button>
-          <Link href="/cos">
-            <Button variant="outline">Inapoi la cos</Button>
-          </Link>
+          {!isOfferCheckout && (
+            <Link href="/cos">
+              <Button variant="outline">Inapoi la cos</Button>
+            </Link>
+          )}
         </div>
       </div>
     )
   }
 
   // Payment step
-  if (step === "payment" && activeClientSecret) {
+  if (step === "payment" && activePayment?.clientSecret) {
     const elementsOptions: StripeElementsOptions = {
-      clientSecret: activeClientSecret,
+      clientSecret: activePayment.clientSecret,
       appearance: {
         theme: "stripe",
         variables: {
@@ -350,7 +389,7 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
               options={elementsOptions}
             >
               <PaymentForm
-                payments={payments}
+                payment={activePayment}
                 onSuccess={handlePaymentSuccess}
                 onError={handlePaymentError}
               />
@@ -521,18 +560,30 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3">
-              {/* Order items */}
+              {/* Order items — show single item only (MVP) */}
               <div className="flex flex-col gap-2">
-                {items.map((item) => (
+                {isOfferCheckout ? (
+                  /* Offer-based: show a placeholder; actual title comes from the server */
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex aspect-square size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+                      <ShoppingCartIcon className="size-5 text-muted-foreground/40" />
+                    </div>
+                    <div className="flex-1 truncate">
+                      <p className="truncate text-sm font-medium">
+                        Comanda oferta
+                      </p>
+                    </div>
+                  </div>
+                ) : cartItem ? (
                   <div
-                    key={item.productId}
+                    key={cartItem.productId}
                     className="flex items-center gap-3"
                   >
                     <div className="relative aspect-square size-12 shrink-0 overflow-hidden rounded-md bg-muted">
-                      {item.image ? (
+                      {cartItem.image ? (
                         <Image
-                          src={item.image}
-                          alt={item.title}
+                          src={cartItem.image}
+                          alt={cartItem.title}
                           fill
                           className="object-cover"
                           sizes="48px"
@@ -545,46 +596,66 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
                     </div>
                     <div className="flex-1 truncate">
                       <p className="truncate text-sm font-medium">
-                        {item.title}
+                        {cartItem.title}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Cantitate: {item.quantity}
+                        Cantitate: {cartItem.quantity}
                       </p>
                     </div>
                     <p className="text-sm font-medium tabular-nums">
-                      {formatRON(item.price * item.quantity)}
+                      {formatRON(cartItem.price * cartItem.quantity)}
                     </p>
                   </div>
-                ))}
+                ) : null}
               </div>
 
               <Separator />
 
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  Subtotal ({totalItems}{" "}
-                  {totalItems === 1 ? "produs" : "produse"})
-                </span>
-                <span className="font-medium tabular-nums">
-                  {formatRON(totalPrice)}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Transport</span>
-                <span className="font-medium text-green-600 tabular-nums">
-                  Gratuit
-                </span>
-              </div>
+              {isOfferCheckout ? (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total</span>
+                  <span className="font-medium tabular-nums">
+                    Conform ofertei
+                  </span>
+                </div>
+              ) : cartItem ? (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Subtotal ({totalItems}{" "}
+                      {totalItems === 1 ? "produs" : "produse"})
+                    </span>
+                    <span className="font-medium tabular-nums">
+                      {formatRON(cartItem.price * cartItem.quantity)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Transport</span>
+                    <span className="font-medium text-green-600 tabular-nums">
+                      Gratuit
+                    </span>
+                  </div>
+                </>
+              ) : null}
+
               <Separator />
               <div className="flex justify-between text-base font-semibold">
                 <span>Total</span>
-                <span className="tabular-nums">{formatRON(totalPrice)}</span>
+                {isOfferCheckout ? (
+                  <span className="tabular-nums">Conform ofertei</span>
+                ) : cartItem ? (
+                  <span className="tabular-nums">
+                    {formatRON(cartItem.price * cartItem.quantity)}
+                  </span>
+                ) : (
+                  <span className="tabular-nums">0 RON</span>
+                )}
               </div>
 
               <Button
                 type="submit"
                 className="mt-2 w-full"
-                disabled={createIntent.isPending}
+                disabled={createIntent.isPending || (!cartItem && !isOfferCheckout)}
               >
                 {createIntent.isPending
                   ? "Se proceseaza..."
@@ -601,12 +672,14 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
                 Plata securizata prin Stripe
               </p>
 
-              <Link href="/cos" className="w-full">
-                <Button variant="ghost" className="w-full">
-                  <ArrowLeftIcon className="size-4" />
-                  Inapoi la cos
-                </Button>
-              </Link>
+              {!isOfferCheckout && (
+                <Link href="/cos" className="w-full">
+                  <Button variant="ghost" className="w-full">
+                    <ArrowLeftIcon className="size-4" />
+                    Inapoi la cos
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
         </div>

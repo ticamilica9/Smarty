@@ -257,6 +257,17 @@ function OfferCard({
           </div>
         </CardContent>
 
+        {/* Pay button for ACCEPTED offers (buyer perspective) */}
+        {offer.status === 'ACCEPTED' && isBuyerPerspective && (
+          <CardFooter className="flex flex-wrap gap-2">
+            <Link href={`/checkout?productId=${offer.productId}&offerId=${offer.id}`}>
+              <Button size="sm" variant="default">
+                Plateste
+              </Button>
+            </Link>
+          </CardFooter>
+        )}
+
         {/* Action buttons — only show for PENDING offers, never for COUNTERED */}
         {(offer.status === 'PENDING' && (showAcceptRefuse || showAcceptCounter || showCounter)) && (
           <CardFooter className="flex flex-wrap gap-2">
