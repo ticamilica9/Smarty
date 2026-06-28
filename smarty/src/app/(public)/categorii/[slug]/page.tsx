@@ -9,6 +9,8 @@ import { prisma } from '@/lib/prisma'
 import { api } from '@/lib/trpc/server'
 import { cn } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 interface CategoryPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>

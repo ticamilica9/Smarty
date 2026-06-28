@@ -6,6 +6,8 @@ import { Card, CardContent, CardTitle, CardDescription } from '@/components/ui/c
 import { Badge } from '@/components/ui/badge'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CategoriesPage() {
   const categories = await prisma.productCategory.findMany({
     where: { parentId: null },
