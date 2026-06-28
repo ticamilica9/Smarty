@@ -16,6 +16,7 @@ import {
   LogOutIcon,
   MessageSquareIcon,
   BarChart3Icon,
+  ShieldAlertIcon,
 } from "lucide-react"
 
 const adminLinks = [
@@ -27,6 +28,7 @@ const adminLinks = [
       { label: "Categorii", href: "/admin/categorii", icon: TagsIcon },
       { label: "Produse", href: "/admin/produse", icon: PackageIcon },
       { label: "Comenzi", href: "/admin/comenzi", icon: ShoppingBagIcon },
+      { label: "Dispute", href: "/admin/dispute", icon: ShieldAlertIcon },
       { label: "Mesaje", href: "/admin/mesaje", icon: MessageSquareIcon },
       { label: "Blog", href: "/admin/blog", icon: FileTextIcon },
       { label: "Rapoarte", href: "/admin/rapoarte", icon: BarChart3Icon },
