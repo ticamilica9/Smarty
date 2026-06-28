@@ -43,3 +43,26 @@ Implemented the client-side cart system with localStorage persistence and the ch
 ## Build Status
 
 Build passes with all existing and new pages compiling successfully.
+
+---
+
+## Post-Task 10 Update: Wire Cart & Offer Buttons on Product Detail Page
+
+### Summary
+
+Wired up the three action buttons on the product detail page at `src/app/(public)/produse/[id]/page.tsx` to use the cart provider and tRPC offer.create mutation.
+
+### Changes Made
+
+**`src/app/(public)/produse/[id]/page.tsx`** (modified):
+- Added imports: `useRouter` from `next/navigation`, `useCart` from `@/components/cart/cart-provider`, `toast` from `sonner`, `Loader2` and `ShoppingCart` from `lucide-react`, and Dialog/Label/Input UI components
+- Added `useCart().addItem` integration with a `cartItem` object mapping product data to the `CartItem` format
+- **"Cumpara acum" button**: calls `addItem()` then `router.push('/checkout')`
+- **"Adauga in cos" button** (new): calls `addItem()` with a toast notification
+- **"Trimite oferta" button**: opens a dialog with an amount input; validates amount < product price, then calls `trpc.offer.create.mutate()` with toast success/failure feedback
+- All buttons are disabled while the offer mutation is pending to prevent double-submission
+
+### Verification
+
+- `npx tsc --noEmit` passes with zero errors
+- `npm run build` succeeds

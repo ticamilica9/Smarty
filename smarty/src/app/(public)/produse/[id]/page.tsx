@@ -1,25 +1,64 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams, notFound } from 'next/navigation'
+import { useParams, notFound, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Heart, MessageSquare, AlertCircle, User } from 'lucide-react'
+import {
+  Heart,
+  MessageSquare,
+  AlertCircle,
+  User,
+  Loader2,
+  ShoppingCart,
+} from 'lucide-react'
+import { toast } from 'sonner'
 
 import { trpc } from '@/lib/trpc/client'
 import { formatRON, conditionLabel } from '@/lib/utils'
+import { useCart } from '@/components/cart/cart-provider'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = params.id as string
   const { data: session } = useSession()
+  const utils = trpc.useUtils()
+  const { addItem } = useCart()
   const { data: product, isLoading } = trpc.product.getById.useQuery({ id })
   const [selectedImage, setSelectedImage] = useState(0)
+
+  // Offer dialog state
+  const [offerDialogOpen, setOfferDialogOpen] = useState(false)
+  const [offerAmount, setOfferAmount] = useState('')
+
+  // Offer create mutation
+  const createOffer = trpc.offer.create.useMutation({
+    onSuccess: () => {
+      toast.success('Oferta ta a fost trimisa cu succes!')
+      setOfferDialogOpen(false)
+      setOfferAmount('')
+      utils.offer.getMyOffers.invalidate()
+    },
+    onError: (error) => {
+      toast.error(error.message)
+    },
+  })
 
   // Loading state
   if (isLoading) {
@@ -56,6 +95,38 @@ export default function ProductDetailPage() {
   const images = product.images.length > 0 ? product.images : ['']
   const isOwner = session?.user?.id === product.sellerId
   const isActive = product.status === 'ACTIVE'
+
+  const cartItem = {
+    productId: product.id,
+    title: product.title,
+    price: product.price,
+    image: product.images[0] || '',
+    sellerId: product.sellerId,
+    sellerName: product.seller.name ?? 'Vanzator',
+  }
+
+  const handleAddToCart = () => {
+    addItem(cartItem)
+    toast.success('Produsul a fost adaugat in cos')
+  }
+
+  const handleBuyNow = () => {
+    addItem(cartItem)
+    router.push('/checkout')
+  }
+
+  const handleSubmitOffer = () => {
+    const amount = parseFloat(offerAmount)
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Introdu o suma valida')
+      return
+    }
+    if (amount >= product.price) {
+      toast.error('Oferta trebuie sa fie mai mica decat pretul afisat')
+      return
+    }
+    createOffer.mutate({ productId: product.id, amount })
+  }
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -233,11 +304,36 @@ export default function ProductDetailPage() {
           {/* Action buttons */}
           {isActive && !isOwner && session?.user && (
             <div className="flex flex-col gap-2">
-              <Button size="lg" className="w-full">
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={handleBuyNow}
+                disabled={createOffer.isPending}
+              >
                 Cumpara acum
               </Button>
-              <Button variant="outline" size="lg" className="w-full">
-                <MessageSquare className="size-4" />
+              <Button
+                size="lg"
+                className="w-full"
+                variant="secondary"
+                onClick={handleAddToCart}
+                disabled={createOffer.isPending}
+              >
+                <ShoppingCart className="size-4" />
+                Adauga in cos
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={() => setOfferDialogOpen(true)}
+                disabled={createOffer.isPending}
+              >
+                {createOffer.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="size-4" />
+                )}
                 Trimite oferta
               </Button>
             </div>
@@ -271,6 +367,61 @@ export default function ProductDetailPage() {
           {product._count.wishlistItems !== 1 ? 'e' : ''} salveaza acest produs
         </p>
       )}
+
+      {/* Offer dialog */}
+      <Dialog open={offerDialogOpen} onOpenChange={setOfferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Trimite oferta</DialogTitle>
+            <DialogDescription>
+              Propune un pret pentru <strong>{product.title}</strong>.
+              Pretul afisat: {formatRON(product.price)}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="offer-amount">
+              Suma ta (RON) <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="offer-amount"
+              type="number"
+              min={0.01}
+              step={0.01}
+              max={product.price - 0.01}
+              placeholder="ex: 50"
+              value={offerAmount}
+              onChange={(e) => setOfferAmount(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Oferta trebuie sa fie mai mica decat pretul afisat ({formatRON(product.price)})
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOfferDialogOpen(false)
+                setOfferAmount('')
+              }}
+            >
+              Anuleaza
+            </Button>
+            <Button
+              onClick={handleSubmitOffer}
+              disabled={!offerAmount || createOffer.isPending}
+            >
+              {createOffer.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <MessageSquare className="size-4" />
+              )}
+              Trimite oferta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
