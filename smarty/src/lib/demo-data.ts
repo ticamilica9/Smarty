@@ -26,7 +26,7 @@ export interface DemoCategory {
 }
 
 export const demoCategories: DemoCategory[] = [
-  { id: 'cat-1', name: 'Machiaj', slug: 'machiaj', parentId: null, icon: '🎨', _count: { products: 5 } },
+  { id: 'cat-1', name: 'Make-up', slug: 'make-up', parentId: null, icon: '💋', _count: { products: 5 } },
   { id: 'cat-2', name: 'Buze', slug: 'buze', parentId: 'cat-1', icon: '💄', _count: { products: 2 } },
   { id: 'cat-3', name: 'Ochi', slug: 'ochi', parentId: 'cat-1', icon: '👁️', _count: { products: 1 } },
   { id: 'cat-4', name: 'Ten', slug: 'ten', parentId: 'cat-1', icon: '✨', _count: { products: 1 } },

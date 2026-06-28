@@ -12,7 +12,7 @@ const footerColumns = [
   {
     title: "Cumpărături",
     links: [
-      { label: "Machiaj", href: "/categorii/machiaj" },
+      { label: "Make-up", href: "/categorii/make-up" },
       { label: "Îngrijire", href: "/categorii/ingrijire" },
       { label: "Parfumuri", href: "/categorii/parfumuri" },
     ],
@@ -67,16 +67,16 @@ export function Footer() {
 
         <div className="mt-10 border-t pt-6 text-center text-xs text-muted-foreground">
           <p>&copy; 2026 Smarty Marketplace. Toate drepturile rezervate.</p>
-          <p className="mt-2">
-            <Link href="/pagini/termeni" className="underline underline-offset-2 hover:text-foreground">
+          <p className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1">
+            <Link href="/pagini/confidentialitate" className="underline underline-offset-2 hover:text-foreground">
               Politica de confidențialitate (GDPR)
             </Link>
-            <span className="mx-2">|</span>
+            <span>|</span>
             <Link href="/pagini/termeni" className="underline underline-offset-2 hover:text-foreground">
               Termeni și condiții
             </Link>
-            <span className="mx-2">|</span>
-            <Link href="/pagini/politica-retur" className="underline underline-offset-2 hover:text-foreground">
+            <span>|</span>
+            <Link href="/pagini/cookie" className="underline underline-offset-2 hover:text-foreground">
               Cookie-uri
             </Link>
           </p>

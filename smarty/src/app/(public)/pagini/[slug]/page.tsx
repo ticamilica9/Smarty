@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Mail, Phone, Clock, CheckCircle, Shield, RefreshCw } from "lucide-react"
+import { ArrowLeft, Mail, Phone, Clock, CheckCircle, Shield, RefreshCw, Package, AlertTriangle, ClipboardList, Truck, Ban } from "lucide-react"
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs"
 
@@ -28,6 +28,12 @@ const paginiMap: Record<string, PaginaContent> = {
   },
   "politica-retur": {
     title: "Politica de retur",
+  },
+  confidentialitate: {
+    title: "Politica de confidențialitate (GDPR)",
+  },
+  cookie: {
+    title: "Politica privind cookie-urile",
   },
 }
 
@@ -73,6 +79,8 @@ export default async function PaginaPage({ params }: PaginaProps) {
           {slug === "cum-functioneaza" && <CumFunctioneazaContent />}
           {slug === "termeni" && <TermeniContent />}
           {slug === "politica-retur" && <PoliticaReturContent />}
+          {slug === "confidentialitate" && <GDPRContent />}
+          {slug === "cookie" && <CookieContent />}
 
         </div>
 
@@ -276,50 +284,164 @@ function TermeniContent() {
 
 function PoliticaReturContent() {
   return (
-    <>
-      <p className="lead text-lg text-muted-foreground">
-        Politica noastră de retur îți oferă protecție și încredere în fiecare achiziție.
+    <div className="not-prose space-y-10">
+      {/* Intro */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-6">
+        <div className="flex items-start gap-3">
+          <Shield className="mt-1 size-6 text-primary shrink-0" />
+          <div>
+            <p className="text-lg font-semibold text-foreground">
+              Politica noastră de retur îți oferă protecție și încredere în fiecare achiziție.
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Ne dorim să fii complet mulțumit de produsele achiziționate prin Smarty. Dacă ceva nu corespunde așteptărilor, suntem aici să te ajutăm.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Perioada */}
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock className="size-5 text-primary" />
+          <h2 className="text-xl font-semibold">Perioada de retur</h2>
+        </div>
+        <p className="text-muted-foreground leading-relaxed">
+          Ai la dispoziție <strong className="text-foreground">14 zile</strong> de la data la care ai primit produsul pentru a solicita returnarea acestuia, în conformitate cu legislația privind vânzările la distanță. Perioada se calculează din ziua următoare recepționării coletului.
+        </p>
+      </div>
+
+      {/* Condiții */}
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <CheckCircle className="size-5 text-success" />
+          <h2 className="text-xl font-semibold">Condiții de returnare</h2>
+        </div>
+        <ul className="space-y-3">
+          {[
+            "Produsul trebuie să fie în aceeași stare în care a fost primit, fără urme de utilizare suplimentară",
+            "Ambalajul original trebuie să fie intact și să conțină toate accesoriile primite",
+            "Produsele cosmetice cu sigiliul de igienă rupt nu pot fi returnate din motive de protecție sanitară",
+            "Costurile de transport pentru retur sunt suportate de cumpărător, cu excepția cazurilor în care produsul nu corespunde descrierii din anunț",
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3 text-muted-foreground">
+              <CheckCircle className="mt-0.5 size-4 text-success shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Excepții */}
+      <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Ban className="size-5 text-destructive" />
+          <h2 className="text-xl font-semibold">Excepții — Nu se pot returna</h2>
+        </div>
+        <ul className="space-y-3">
+          {[
+            "Produsele de igienă personală și cosmeticele cu sigiliul de securitate rupt",
+            "Parfumurile, spray-urile și deodorantele al căror sigiliu a fost deschis",
+            "Produsele personalizate sau realizate la comandă specială",
+            'Produsele marcate ca "vanzare finala" sau "sold final" la momentul achizitiei',
+          ].map((item, i) => (
+            <li key={i} className="flex items-start gap-3 text-muted-foreground">
+              <AlertTriangle className="mt-0.5 size-4 text-destructive/70 shrink-0" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Cum returnezi */}
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <Package className="size-5 text-primary" />
+          <h2 className="text-xl font-semibold">Cum returnezi un produs</h2>
+        </div>
+        <div className="space-y-4">
+          {[
+            { step: 1, icon: ClipboardList, text: 'Accesează secțiunea "Comenzile mele" din contul tău Smarty' },
+            { step: 2, icon: Package, text: "Selectează comanda și produsul pe care dorești să îl returnezi" },
+            { step: 3, icon: CheckCircle, text: "Completează formularul de retur, specificând motivul returnării" },
+            { step: 4, icon: Package, text: "Ambalază produsul în siguranță, preferabil în ambalajul original" },
+            { step: 5, icon: Truck, text: "Expediază coletul la adresa indicată în email-ul de confirmare a returului" },
+          ].map((item) => (
+            <div key={item.step} className="flex items-start gap-4 rounded-lg bg-muted/40 p-4">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <span className="text-sm font-bold text-primary">{item.step}</span>
+              </div>
+              <p className="pt-1.5 text-sm text-muted-foreground leading-relaxed">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Procesare */}
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
+          <RefreshCw className="size-5 text-primary" />
+          <h2 className="text-xl font-semibold">Procesarea returnării</h2>
+        </div>
+        <p className="text-muted-foreground leading-relaxed">
+          După ce primim coletul returnat și verificăm starea produsului, rambursarea se efectuează în <strong className="text-foreground">maxim 14 zile lucrătoare</strong>. Suma va fi returnată prin aceeași metodă de plată utilizată la achiziție.
+        </p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Vei primi notificări prin email la fiecare pas al procesului: confirmarea cererii de retur, primirea coletului și efectuarea rambursării.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function GDPRContent() {
+  return (
+    <div className="not-prose space-y-8">
+      <p className="text-lg text-muted-foreground leading-relaxed">
+        La Smarty, protejarea datelor tale personale este o prioritate. Această politică descrie modul în care colectăm, utilizăm și protejăm informațiile tale, în conformitate cu GDPR.
       </p>
+      {[
+        { title: "Ce date colectăm", items: ["Nume, prenume și adresă de email", "Număr de telefon (opțional, pentru livrări)", "Adresa de livrare", "Istoricul comenzilor și tranzacțiilor", "Date de navigare (cookie-uri, IP, dispozitiv)"] },
+        { title: "Scopul colectării", items: ["Procesarea comenzilor și comunicarea cu tine", "Îmbunătățirea experienței pe platformă", "Respectarea obligațiilor legale (facturare, garanții)", "Marketing — doar cu acordul tău explicit"] },
+        { title: "Drepturile tale", items: ["Dreptul de acces — poți solicita o copie a datelor tale", "Dreptul la rectificare — corectează datele inexacte", "Dreptul la ștergere", "Dreptul la restricționarea prelucrării", "Dreptul la portabilitatea datelor", "Dreptul de a depune o plângere la ANSPDCP"] },
+      ].map((section) => (
+        <div key={section.title} className="rounded-xl border bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold mb-4">{section.title}</h2>
+          <ul className="space-y-2">
+            {section.items.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 text-muted-foreground">
+                <CheckCircle className="mt-0.5 size-4 text-primary shrink-0" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      <div className="rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="text-xl font-semibold mb-4">Contact DPO</h2>
+        <p className="text-muted-foreground">Pentru orice întrebare privind datele tale: <a href="mailto:dpo@smarty.ro" className="text-primary hover:underline">dpo@smarty.ro</a></p>
+      </div>
+    </div>
+  )
+}
 
-      <h2>Perioada de retur</h2>
-      <p>
-        Ai la dispoziție <strong>14 zile</strong> de la primirea produsului pentru a solicita
-        returnarea acestuia, în conformitate cu legislația în vigoare privind vânzările
-        la distanță.
+function CookieContent() {
+  return (
+    <div className="not-prose space-y-8">
+      <p className="text-lg text-muted-foreground leading-relaxed">
+        Acest site utilizează cookie-uri pentru a-ți oferi o experiență de navigare optimă.
       </p>
-
-      <h2>Condiții de returnare</h2>
-      <ul>
-        <li>Produsul trebuie să fie în aceeași stare în care a fost primit</li>
-        <li>Ambalajul original trebuie să fie intact</li>
-        <li>Produsele sigilate (sigiliu rupt) nu pot fi returnate din motive de igienă</li>
-        <li>Costurile de returnare sunt suportate de cumpărător, cu excepția cazurilor în care produsul este diferit de descriere</li>
-      </ul>
-
-      <h2>Excepții</h2>
-      <p>Următoarele produse nu pot fi returnate:</p>
-      <ul>
-        <li>Produsele de igienă personală cu sigiliul rupt</li>
-        <li>Parfumurile și spray-urile cu sigiliul rupt</li>
-        <li>Produsele personalizate</li>
-        <li>Produsele declarate ca având discount final (sold finale)</li>
-      </ul>
-
-      <h2>Cum returnezi un produs</h2>
-      <ol>
-        <li>Accesează secțiunea "Comenzile mele" din contul tău</li>
-        <li>Selectează comanda și produsul pe care dorești să îl returnezi</li>
-        <li>Completează formularul de retur cu motivul returnării</li>
-        <li>Ambalază produsul în ambalajul original</li>
-        <li>Expediază coletul la adresa primită prin email</li>
-      </ol>
-
-      <h2>Procesarea returnării</h2>
-      <p>
-        După primirea coletului returnat și verificarea stării produsului, rambursarea se
-        efectuează în maxim 14 zile lucrătoare, prin aceeași metodă de plată utilizată
-        la achiziție.
-      </p>
-    </>
+      {[
+        { title: "Cookie-uri esențiale", desc: "Necesare pentru funcționarea site-ului: autentificare, securitate, coș de cumpărături. Nu pot fi dezactivate." },
+        { title: "Cookie-uri de performanță", desc: "Ne ajută să înțelegem cum interacționezi cu site-ul (pagini vizitate, timp petrecut) pentru a optimiza experiența." },
+        { title: "Cookie-uri de funcționalitate", desc: "Rețin preferințele tale pentru o experiență personalizată la vizitele următoare." },
+        { title: "Cum le gestionezi", desc: "Poți șterge sau bloca cookie-urile din setările browserului tău." },
+      ].map((s, i) => (
+        <div key={i} className="rounded-xl border bg-card p-6 shadow-sm">
+          <h2 className="text-xl font-semibold mb-2">{s.title}</h2>
+          <p className="text-muted-foreground">{s.desc}</p>
+        </div>
+      ))}
+    </div>
   )
 }
