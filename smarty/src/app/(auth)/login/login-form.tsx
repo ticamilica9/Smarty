@@ -6,10 +6,28 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { toast } from 'sonner'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleCredentialsLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
+    setLoading(false)
+    if (result?.error) {
+      toast.error('Email sau parola gresita. Incearca demo123')
+    } else {
+      window.location.href = '/'
+    }
+  }
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,7 +38,8 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleEmailLogin} className="space-y-4">
+      {/* Credentials login */}
+      <form onSubmit={handleCredentialsLogin} className="space-y-4">
         <div>
           <Label htmlFor="email">Email</Label>
           <Input
@@ -32,8 +51,44 @@ export function LoginForm() {
             required
           />
         </div>
+        <div>
+          <Label htmlFor="password">Parola</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="demo123"
+            required
+          />
+        </div>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Se trimite...' : 'Continua cu Email'}
+          {loading ? 'Se autentifica...' : 'Intra in cont'}
+        </Button>
+      </form>
+
+      <div className="rounded-md bg-purple-50 p-3 text-sm text-purple-800">
+        <p className="font-medium mb-1">Conturi demo:</p>
+        <p>Admin: <strong>admin@smarty.ro</strong> / admin123</p>
+        <p>User: <strong>ana@email.com</strong> / demo123</p>
+        <p>Sau: orice email + parola <strong>demo123</strong></p>
+      </div>
+
+      <Separator />
+
+      {/* Email magic link */}
+      <form onSubmit={handleEmailLogin} className="space-y-4">
+        <div>
+          <Label htmlFor="magic-email">Email (link magic)</Label>
+          <Input
+            id="magic-email"
+            type="email"
+            placeholder="nume@email.com"
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full" variant="outline" disabled={loading}>
+          Continua cu Email (link magic)
         </Button>
       </form>
 

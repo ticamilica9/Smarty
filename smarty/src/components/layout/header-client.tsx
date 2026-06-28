@@ -146,11 +146,8 @@ export function HeaderClient({ user }: HeaderClientProps) {
         </Sheet>
 
         {/* Logo */}
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2 text-xl font-bold tracking-tight"
-        >
-          Smarty
+        <Link href="/" className="flex shrink-0 items-center gap-2">
+          <img src="/smarty-logo.png" alt="Smarty" className="h-10 w-auto" />
         </Link>
 
         {/* Desktop nav */}
