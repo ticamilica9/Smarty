@@ -1,15 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import {
   ShoppingCartIcon,
   PackageIcon,
   MapPinIcon,
   CreditCardIcon,
   ArrowLeftIcon,
+  CheckCircleIcon,
+  LockIcon,
 } from "lucide-react"
+import { loadStripe, type StripeElementsOptions } from "@stripe/stripe-js"
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +34,14 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/components/cart/cart-provider"
 import { formatRON } from "@/lib/utils"
+import { trpc } from "@/lib/trpc/client"
+
+if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+  throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set")
+}
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+)
 
 interface CheckoutFormProps {
   userId: string
@@ -40,8 +58,141 @@ interface FormData {
   shippingMethod: ShippingMethod
 }
 
+type CheckoutStep = "form" | "processing" | "payment" | "success" | "error"
+
+interface PaymentInfo {
+  orderId: string
+  clientSecret: string | null
+  paymentIntentId: string | null
+  amount: number
+  productTitle: string
+  error?: string
+}
+
+/**
+ * Inner payment form that uses Stripe Elements.
+ * Handles confirming a single PaymentIntent.
+ */
+function PaymentForm({
+  payments,
+  onSuccess,
+  onError,
+}: {
+  payments: PaymentInfo[]
+  onSuccess: () => void
+  onError: (message: string) => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [isPaying, setIsPaying] = useState(false)
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  const currentPayment = payments[currentIndex]
+  const isLastPayment = currentIndex === payments.length - 1
+
+  const handlePay = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+
+      if (!stripe || !elements || !currentPayment?.clientSecret) return
+
+      setIsPaying(true)
+
+      const { error: submitError } = await elements.submit()
+      if (submitError) {
+        setIsPaying(false)
+        onError(submitError.message ?? "Eroare la procesarea platii")
+        return
+      }
+
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        clientSecret: currentPayment.clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout`,
+        },
+        redirect: "if_required",
+      })
+
+      if (confirmError) {
+        setIsPaying(false)
+        onError(confirmError.message ?? "Plata a esuat")
+        return
+      }
+
+      // Payment succeeded for this intent
+      if (isLastPayment) {
+        onSuccess()
+      } else {
+        // Move to next payment
+        setCurrentIndex((i) => i + 1)
+        setIsPaying(false)
+      }
+    },
+    [stripe, elements, currentPayment, isLastPayment, onSuccess, onError],
+  )
+
+  if (!currentPayment) {
+    return (
+      <div className="py-8 text-center text-muted-foreground">
+        Nu exista plati de procesat
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handlePay}>
+      <div className="grid gap-4">
+        <div className="rounded-lg border bg-muted/30 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Comanda #{currentPayment.orderId.slice(0, 8)}
+              </p>
+              <p className="text-sm font-medium">
+                {currentPayment.productTitle}
+              </p>
+            </div>
+            <p className="text-lg font-semibold tabular-nums">
+              {formatRON(currentPayment.amount)}
+            </p>
+          </div>
+          {payments.length > 1 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Plata {currentIndex + 1} din {payments.length}
+            </p>
+          )}
+        </div>
+
+        <PaymentElement />
+
+        {currentPayment.error && (
+          <p className="text-sm text-destructive">{currentPayment.error}</p>
+        )}
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <LockIcon className="size-3" />
+          Plata este securizata de Stripe
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={!stripe || !elements || isPaying}
+        >
+          {isPaying
+            ? "Se proceseaza..."
+            : `Plateste ${formatRON(currentPayment.amount)}`}
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
-  const { items, totalItems, totalPrice } = useCart()
+  const router = useRouter()
+  const { items, totalItems, totalPrice, clearCart } = useCart()
+  const [step, setStep] = useState<CheckoutStep>("form")
   const [formData, setFormData] = useState<FormData>({
     city: "",
     address: "",
@@ -50,7 +201,10 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
     notes: "",
     shippingMethod: "courier",
   })
-  const [submitting, setSubmitting] = useState(false)
+  const [payments, setPayments] = useState<PaymentInfo[]>([])
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const createIntent = trpc.payment.createIntent.useMutation()
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -58,14 +212,58 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
-    // Stripe PaymentIntent integration will be added in Task 11.
-    // For now, this is a placeholder.
-    await new Promise((r) => setTimeout(r, 500))
-    setSubmitting(false)
+    setStep("processing")
+    setErrorMessage(null)
+
+    try {
+      const result = await createIntent.mutateAsync({
+        items: items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+        })),
+      })
+
+      const validPayments = result.payments.filter(
+        (p): p is typeof p & { clientSecret: string } => p.clientSecret !== null,
+      )
+
+      if (validPayments.length === 0) {
+        setErrorMessage(
+          result.payments[0]?.error ??
+            "Nu s-au putut crea platile. Vanzatorul nu are un cont Stripe conectat.",
+        )
+        setStep("error")
+        return
+      }
+
+      setPayments(validPayments)
+      setStep("payment")
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "A aparut o eroare la procesarea comenzii"
+      setErrorMessage(message)
+      setStep("error")
+    }
   }
 
-  if (items.length === 0) {
+  const handlePaymentSuccess = useCallback(() => {
+    clearCart()
+    setStep("success")
+  }, [clearCart])
+
+  const handlePaymentError = useCallback(
+    (message: string) => {
+      setErrorMessage(message)
+      setStep("error")
+    },
+    [],
+  )
+
+  // Find the client secret for the Elements provider
+  const activeClientSecret = payments[0]?.clientSecret
+
+  // Empty cart state
+  if (items.length === 0 && step !== "success") {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
         <ShoppingCartIcon className="size-16 text-muted-foreground/40" />
@@ -80,6 +278,102 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
     )
   }
 
+  // Success state
+  if (step === "success") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+        <div className="flex size-16 items-center justify-center rounded-full bg-green-100">
+          <CheckCircleIcon className="size-8 text-green-600" />
+        </div>
+        <h2 className="text-xl font-semibold">Comanda a fost plasata!</h2>
+        <p className="max-w-md text-muted-foreground">
+          Plata a fost procesata cu succes. Vanzatorul va fi notificat si va
+          procesa comanda in curand.
+        </p>
+        <div className="flex gap-3">
+          <Link href="/cont/comenzi">
+            <Button>Vezi comenzile mele</Button>
+          </Link>
+          <Link href="/categorii">
+            <Button variant="outline">Continua cumparaturile</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (step === "error") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+        <div className="flex size-16 items-center justify-center rounded-full bg-destructive/10">
+          <ShoppingCartIcon className="size-8 text-destructive" />
+        </div>
+        <h2 className="text-xl font-semibold">Eroare la procesare</h2>
+        <p className="max-w-md text-muted-foreground">
+          {errorMessage ?? "A aparut o eroare neasteptata. Te rugam sa incerci din nou."}
+        </p>
+        <div className="flex gap-3">
+          <Button onClick={() => setStep("form")}>Incearca din nou</Button>
+          <Link href="/cos">
+            <Button variant="outline">Inapoi la cos</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Payment step
+  if (step === "payment" && activeClientSecret) {
+    const elementsOptions: StripeElementsOptions = {
+      clientSecret: activeClientSecret,
+      appearance: {
+        theme: "stripe",
+        variables: {
+          colorPrimary: "#18181b",
+        },
+      },
+    }
+
+    return (
+      <div className="mx-auto max-w-lg">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCardIcon className="size-4" />
+              Plata cu cardul
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Elements
+              stripe={stripePromise}
+              options={elementsOptions}
+            >
+              <PaymentForm
+                payments={payments}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            </Elements>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Processing step
+  if (step === "processing") {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-muted-foreground">
+          Se proceseaza comanda...
+        </p>
+      </div>
+    )
+  }
+
+  // Form step (default)
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -268,7 +562,8 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
 
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
-                  Subtotal ({totalItems} {totalItems === 1 ? "produs" : "produse"})
+                  Subtotal ({totalItems}{" "}
+                  {totalItems === 1 ? "produs" : "produse"})
                 </span>
                 <span className="font-medium tabular-nums">
                   {formatRON(totalPrice)}
@@ -289,21 +584,29 @@ export function CheckoutForm({ userId: _userId }: CheckoutFormProps) {
               <Button
                 type="submit"
                 className="mt-2 w-full"
-                disabled={submitting}
+                disabled={createIntent.isPending}
               >
-                {submitting ? "Se proceseaza..." : "Plaseaza comanda"}
+                {createIntent.isPending
+                  ? "Se proceseaza..."
+                  : "Plaseaza comanda"}
               </Button>
 
+              {errorMessage && (
+                <p className="text-center text-xs text-destructive">
+                  {errorMessage}
+                </p>
+              )}
+
               <p className="text-center text-xs text-muted-foreground">
-                Plata cu cardul va fi disponibila in curand
+                Plata securizata prin Stripe
               </p>
 
               <Link href="/cos" className="w-full">
-                  <Button variant="ghost" className="w-full">
-                    <ArrowLeftIcon className="size-4" />
-                    Inapoi la cos
-                  </Button>
-                </Link>
+                <Button variant="ghost" className="w-full">
+                  <ArrowLeftIcon className="size-4" />
+                  Inapoi la cos
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
