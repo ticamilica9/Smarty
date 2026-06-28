@@ -27,8 +27,9 @@ export default async function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-500 to-pink-500 px-6 py-24 text-white sm:py-32">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:3rem_3rem]" />
+      <section className="hero-gradient relative overflow-hidden px-6 py-24 text-white sm:py-32">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.10)_0%,transparent_50%),radial-gradient(ellipse_at_bottom_left,rgba(255,255,255,0.04)_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Gasesti ce iti doresti, la pretul potrivit
@@ -41,7 +42,7 @@ export default async function HomePage() {
             <Link href="/categorii">
               <Button
                 size="lg"
-                className="bg-white text-purple-700 hover:bg-white/90"
+                className="bg-white text-primary hover:bg-white/90"
               >
                 Exploreaza produse
                 <ArrowRight className="ml-1.5 size-4" />
@@ -230,7 +231,7 @@ export default async function HomePage() {
 
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
             <div className="flex flex-col items-center gap-3">
-              <div className="flex size-16 items-center justify-center rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground">
                 <Package className="size-8" />
               </div>
               <h3 className="text-lg font-semibold">Posteaza</h3>
@@ -240,7 +241,7 @@ export default async function HomePage() {
             </div>
 
             <div className="flex flex-col items-center gap-3">
-              <div className="flex size-16 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400">
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent-foreground">
                 <Handshake className="size-8" />
               </div>
               <h3 className="text-lg font-semibold">Negociaza</h3>

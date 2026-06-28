@@ -4,6 +4,7 @@
 export interface DemoUser {
   id: string; name: string; email: string; image: string | null;
   buyerRating: number; sellerRating: number; role: string;
+  status: string; createdAt: Date;
 }
 
 export interface DemoProduct {

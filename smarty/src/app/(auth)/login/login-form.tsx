@@ -67,7 +67,7 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <div className="rounded-md bg-purple-50 p-3 text-sm text-purple-800">
+      <div className="rounded-md bg-muted p-3 text-sm text-foreground border border-border">
         <p className="font-medium mb-1">Conturi demo:</p>
         <p>Admin: <strong>admin@smarty.ro</strong> / admin123</p>
         <p>User: <strong>ana@email.com</strong> / demo123</p>
