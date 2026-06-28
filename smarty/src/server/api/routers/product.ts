@@ -193,6 +193,78 @@ export const productRouter = router({
     }),
 
   /**
+   * Toggle a product in the user's wishlist.
+   * If the item exists, it is removed. Otherwise, it is created.
+   * Returns { added: boolean } — true if the item was added, false if removed.
+   */
+  toggleWishlist: protectedProcedure
+    .input(z.object({ productId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = (ctx.user as { id: string }).id
+
+      const existing = await ctx.prisma.wishlistItem.findUnique({
+        where: {
+          userId_productId: {
+            userId,
+            productId: input.productId,
+          },
+        },
+      })
+
+      if (existing) {
+        await ctx.prisma.wishlistItem.delete({
+          where: { id: existing.id },
+        })
+        return { added: false }
+      }
+
+      await ctx.prisma.wishlistItem.create({
+        data: {
+          userId,
+          productId: input.productId,
+        },
+      })
+      return { added: true }
+    }),
+
+  /**
+   * Get all wishlist items for the current user with product details.
+   */
+  getWishlist: protectedProcedure.query(async ({ ctx }) => {
+    const userId = (ctx.user as { id: string }).id
+
+    return ctx.prisma.wishlistItem.findMany({
+      where: { userId },
+      include: {
+        product: {
+          include: productWithIncludes,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+  }),
+
+  /**
+   * Check if a specific product is in the current user's wishlist.
+   */
+  isWishlisted: protectedProcedure
+    .input(z.object({ productId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = (ctx.user as { id: string }).id
+
+      const item = await ctx.prisma.wishlistItem.findUnique({
+        where: {
+          userId_productId: {
+            userId,
+            productId: input.productId,
+          },
+        },
+      })
+
+      return { isWishlisted: !!item }
+    }),
+
+  /**
    * Get the latest active products.
    */
   getLatest: publicProcedure
