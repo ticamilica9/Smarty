@@ -8,13 +8,18 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ProductCard } from "@/components/product/product-card"
 
+async function withTimeout<T>(promise: Promise<T>, fallback: T, ms: number): Promise<T> {
+  const timeout = new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))
+  return Promise.race([promise.catch(() => fallback), timeout])
+}
+
 export default async function HomePage() {
   const caller = await api()
 
   const [categories, latestProducts, activeRfqs] = await Promise.all([
-    caller.category.getAll({ parentId: null }).catch(() => []),
-    caller.product.getLatest({ limit: 8 }).catch(() => []),
-    caller.rfq.getAll({ limit: 4 }).catch(() => ({ rfqs: [], total: 0 })),
+    withTimeout(caller.category.getAll({ parentId: null }), [], 5000),
+    withTimeout(caller.product.getLatest({ limit: 8 }), [], 5000),
+    withTimeout(caller.rfq.getAll({ limit: 4 }), { rfqs: [], total: 0 }, 5000),
   ])
 
   const displayCategories = (categories || []).slice(0, 5)
