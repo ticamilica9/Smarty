@@ -36,6 +36,7 @@ import {
   PlusCircleIcon,
   StoreIcon,
   ChevronDownIcon,
+  ShieldIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -272,6 +273,20 @@ export function HeaderClient({ user }: HeaderClientProps) {
                     Adauga anunt
                   </Link>
                 </DropdownMenuItem>
+                {user.role === 'ADMIN' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Link
+                        href="/admin"
+                        className="flex w-full items-center gap-2 text-primary font-medium"
+                      >
+                        <ShieldIcon className="size-4" />
+                        Admin Smarty
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link

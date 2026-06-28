@@ -27,8 +27,11 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 }
 
 export default async function AdminPage() {
-  const stats = await (await api()).admin.getDashboardStats()
-  const latestOrders = await (await api()).admin.getLatestOrders()
+  const caller = await api()
+  const [stats, latestOrders] = await Promise.all([
+    caller.admin.getDashboardStats().catch(() => ({ totalUsers: 0, totalProducts: 0, totalOrders: 0, disputedOrders: 0, totalRevenue: 0 })),
+    caller.admin.getLatestOrders().catch(() => []),
+  ])
 
   const statCards = [
     {
