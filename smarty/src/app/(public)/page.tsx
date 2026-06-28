@@ -12,12 +12,12 @@ export default async function HomePage() {
   const caller = await api()
 
   const [categories, latestProducts, activeRfqs] = await Promise.all([
-    caller.category.getAll({ parentId: null }),
-    caller.product.getLatest({ limit: 8 }),
-    caller.rfq.getAll({ limit: 4 }),
+    caller.category.getAll({ parentId: null }).catch(() => []),
+    caller.product.getLatest({ limit: 8 }).catch(() => []),
+    caller.rfq.getAll({ limit: 4 }).catch(() => ({ rfqs: [], total: 0 })),
   ])
 
-  const displayCategories = categories.slice(0, 5)
+  const displayCategories = (categories || []).slice(0, 5)
 
   return (
     <div className="flex flex-col">
