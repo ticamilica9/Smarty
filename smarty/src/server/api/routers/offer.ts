@@ -238,7 +238,7 @@ export const offerRouter = router({
 
       // Handle ACCEPTED
       if (input.action === 'ACCEPTED') {
-        const result = await ctx.prisma.$transaction(async (tx) => {
+        const result = await ctx.prisma.$transaction(async (tx: any) => {
           // Update offer status
           const updated = await tx.offer.update({
             where: { id: input.id },
@@ -324,7 +324,7 @@ export const offerRouter = router({
       }
 
       if (input.action === 'ACCEPTED') {
-        const result = await ctx.prisma.$transaction(async (tx) => {
+        const result = await ctx.prisma.$transaction(async (tx: any) => {
           const updated = await tx.offer.update({
             where: { id: input.id },
             data: { status: 'ACCEPTED' },

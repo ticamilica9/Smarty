@@ -162,7 +162,7 @@ export const paymentRouter = router({
 
       for (const [, group] of sellerGroups) {
         // Use transaction to create order + payment atomically
-        const result = await ctx.prisma.$transaction(async (tx) => {
+        const result = await ctx.prisma.$transaction(async (tx: any) => {
           // Create one order per seller containing all their items
           // For now we create one order per product (matching existing schema)
           // Actually the schema has Order.productId as a single product ref
@@ -208,7 +208,7 @@ export const paymentRouter = router({
       for (const result of results) {
         if (result.hasStripeAccount) {
           // Find the seller's stripeConnectId
-          const seller = products.find((p) => p.sellerId === result.sellerId)?.seller
+          const seller = products.find((p: any) => p.sellerId === result.sellerId)?.seller
           const stripeConnectId = seller?.stripeConnectId
 
           if (stripeConnectId) {

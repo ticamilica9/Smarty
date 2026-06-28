@@ -142,7 +142,7 @@ export function OrdersTable() {
             )}
 
             {!isLoading &&
-              data?.orders.map((order) => (
+              data?.orders.map((order: any) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-mono text-xs">
                     <Link

@@ -83,9 +83,9 @@ export default function MyRFQsPage() {
     )
   }
 
-  const openRFQs = rfqs?.filter((r) => r.status === 'OPEN') ?? []
-  const awardedRFQs = rfqs?.filter((r) => r.status === 'AWARDED') ?? []
-  const closedRFQs = rfqs?.filter((r) => r.status === 'CLOSED') ?? []
+  const openRFQs = rfqs?.filter((r: any) => r.status === 'OPEN') ?? []
+  const awardedRFQs = rfqs?.filter((r: any) => r.status === 'AWARDED') ?? []
+  const closedRFQs = rfqs?.filter((r: any) => r.status === 'CLOSED') ?? []
 
   return (
     <div>
@@ -158,7 +158,7 @@ export default function MyRFQsPage() {
 
     return (
       <div className="space-y-4">
-        {items.map((rfq) => (
+        {items.map((rfq: any) => (
           <Link key={rfq.id} href={`/cereri/${rfq.id}`}>
             <Card className="transition-colors hover:bg-muted/50">
               <CardContent className="pt-4">
@@ -195,18 +195,18 @@ export default function MyRFQsPage() {
                     </div>
 
                     {/* Show accepted offer if awarded */}
-                    {rfq.status === 'AWARDED' && rfq.offers.some((o) => o.status === 'ACCEPTED') && (
+                    {rfq.status === 'AWARDED' && rfq.offers.some((o: any) => o.status === 'ACCEPTED') && (
                       <div className="mt-2 rounded-md bg-primary/5 p-2 text-sm">
                         <span className="font-medium">
                           Oferta acceptata:{' '}
                           {formatRON(
-                            rfq.offers.find((o) => o.status === 'ACCEPTED')?.amount ?? 0,
+                            rfq.offers.find((o: any) => o.status === 'ACCEPTED')?.amount ?? 0,
                           )}
                         </span>
-                        {rfq.offers.find((o) => o.status === 'ACCEPTED')?.seller.name && (
+                        {rfq.offers.find((o: any) => o.status === 'ACCEPTED')?.seller.name && (
                           <span className="text-muted-foreground">
                             {' '}de{' '}
-                            {rfq.offers.find((o) => o.status === 'ACCEPTED')?.seller.name}
+                            {rfq.offers.find((o: any) => o.status === 'ACCEPTED')?.seller.name}
                           </span>
                         )}
                       </div>

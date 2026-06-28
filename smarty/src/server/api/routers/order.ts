@@ -177,7 +177,7 @@ export const orderRouter = router({
       await stripe.paymentIntents.capture(order.payment.stripePaymentIntentId)
 
       // Atomically update Order and Payment statuses
-      await ctx.prisma.$transaction(async (tx) => {
+      await ctx.prisma.$transaction(async (tx: any) => {
         await tx.order.update({
           where: { id: input.orderId },
           data: { status: 'DELIVERED' },

@@ -76,7 +76,7 @@ export const reviewRouter = router({
       }
 
       // Create the review and update seller rating atomically
-      const result = await ctx.prisma.$transaction(async (tx) => {
+      const result = await ctx.prisma.$transaction(async (tx: any) => {
         const review = await tx.review.create({
           data: {
             orderId: input.orderId,

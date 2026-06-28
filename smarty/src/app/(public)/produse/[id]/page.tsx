@@ -154,7 +154,7 @@ export default function ProductDetailPage() {
           {/* Thumbnails */}
           {images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {images.map((url, i) => (
+              {images.map((url: any, i: any) => (
                 <button
                   key={i}
                   type="button"

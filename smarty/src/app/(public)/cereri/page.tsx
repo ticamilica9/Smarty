@@ -97,7 +97,7 @@ export default function RFQListPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toate categoriile</SelectItem>
-              {categories?.map((cat) => (
+              {categories?.map((cat: any) => (
                 <SelectItem key={cat.id} value={cat.id}>
                   {cat.name}
                 </SelectItem>
@@ -142,7 +142,7 @@ export default function RFQListPage() {
             {data.total} cerer{data.total === 1 ? 'e' : 'i'} active gasite
           </p>
           <div className="space-y-4">
-            {data.rfqs.map((rfq) => (
+            {data.rfqs.map((rfq: any) => (
               <Link key={rfq.id} href={`/cereri/${rfq.id}`}>
                 <Card className="transition-colors hover:bg-muted/50">
                   <CardContent className="pt-4">

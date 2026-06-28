@@ -284,7 +284,7 @@ export const rfqRouter = router({
           status: 'PENDING',
         },
         include: rfqOfferWithIncludes,
-      }).then(async (offer) => {
+      }).then(async (offer: any) => {
         // Notify the buyer in real time
         sendNotification(rfq.buyerId, {
           type: 'RFQ_OFFER_RECEIVED',
@@ -370,8 +370,7 @@ export const rfqRouter = router({
       }
 
       // Execute in transaction: accept the winning offer, reject others, create order
-      const result = await ctx.prisma.$transaction(async (tx) => {
-        // Accept the winning offer
+      const result = await ctx.prisma.$transaction(async (tx: any) => {
         const acceptedOffer = await tx.rFQOffer.update({
           where: { id: input.offerId },
           data: { status: 'ACCEPTED' },

@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let categoryPages: MetadataRoute.Sitemap = []
   try {
     const categories = await caller.category.getAll()
-    categoryPages = categories.map((cat) => ({
+    categoryPages = categories.map((cat: any) => ({
       url: `${baseUrl}/categorii/${cat.slug}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
@@ -54,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let productPages: MetadataRoute.Sitemap = []
   try {
     const products = await caller.product.getLatest({ limit: 50 })
-    productPages = products.map((product) => ({
+    productPages = products.map((product: any) => ({
       url: `${baseUrl}/produse/${product.id}`,
       lastModified: product.updatedAt ?? product.createdAt,
       changeFrequency: 'weekly' as const,
@@ -82,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let rfqPages: MetadataRoute.Sitemap = []
   try {
     const rfqs = await caller.rfq.getAll({ limit: 100 })
-    rfqPages = rfqs.rfqs.map((rfq) => ({
+    rfqPages = rfqs.rfqs.map((rfq: any) => ({
       url: `${baseUrl}/cereri/${rfq.id}`,
       lastModified: rfq.updatedAt ?? rfq.createdAt,
       changeFrequency: 'weekly' as const,

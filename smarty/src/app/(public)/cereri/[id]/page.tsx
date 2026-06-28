@@ -403,8 +403,8 @@ export default function RFQDetailPage() {
               >
                 <option value="">Fara produs asociat</option>
                 {myProducts
-                  ?.filter((p) => p.status === 'ACTIVE')
-                  .map((p) => (
+                  ?.filter((p: any) => p.status === 'ACTIVE')
+                  .map((p: any) => (
                     <option key={p.id} value={p.id}>
                       {p.title} - {formatRON(p.price)}
                     </option>

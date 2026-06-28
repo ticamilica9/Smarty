@@ -80,7 +80,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {displayCategories.map((category) => (
+            {displayCategories.map((category: any) => (
               <Link
                 key={category.id}
                 href={`/categorii/${category.slug}`}
@@ -131,7 +131,7 @@ export default async function HomePage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              {activeRfqs.rfqs.slice(0, 4).map((rfq) => (
+              {activeRfqs.rfqs.slice(0, 4).map((rfq: any) => (
                 <Link key={rfq.id} href={`/cereri/${rfq.id}`}>
                   <Card className="transition-all hover:border-primary/30 hover:shadow-md">
                     <CardContent className="grid gap-2">
@@ -197,7 +197,7 @@ export default async function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {latestProducts.slice(0, 8).map((product) => (
+              {latestProducts.slice(0, 8).map((product: any) => (
                 <ProductCard
                   key={product.id}
                   product={product}

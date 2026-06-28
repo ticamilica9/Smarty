@@ -226,7 +226,7 @@ export function OrderDetail({
 
   const isBuyer = order.buyerId === userId
   const isSeller = order.sellerId === userId
-  const StatusIcon = statusConfig[order.status]?.icon ?? Package
+  const StatusIcon = statusConfig[order.status as OrderStatus]?.icon ?? Package
   const canConfirmDelivery = isBuyer && order.status === 'SHIPPED'
   const canRequestReturn = isBuyer && order.status === 'DELIVERED'
   const canReview = isBuyer && order.status === 'DELIVERED' && !order.review
@@ -276,9 +276,9 @@ export function OrderDetail({
             })}
           </p>
         </div>
-        <Badge variant={statusConfig[order.status]?.variant ?? 'secondary'} className="w-fit">
+        <Badge variant={statusConfig[order.status as OrderStatus]?.variant ?? 'secondary'} className="w-fit">
           <StatusIcon className="mr-1.5 size-3.5" />
-          {statusConfig[order.status]?.label ?? order.status}
+          {statusConfig[order.status as OrderStatus]?.label ?? order.status}
         </Badge>
       </div>
 

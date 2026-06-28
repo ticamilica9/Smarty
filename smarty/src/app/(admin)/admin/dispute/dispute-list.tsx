@@ -70,7 +70,7 @@ export function DisputeList() {
 
   return (
     <div className="space-y-4">
-      {disputedOrders.map((order) => (
+      {disputedOrders.map((order: any) => (
         <Card key={order.id}>
           <CardHeader>
             <div className="flex items-center justify-between">

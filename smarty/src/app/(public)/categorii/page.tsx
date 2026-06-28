@@ -35,7 +35,7 @@ export default async function CategoriesPage() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((cat) => (
+        {categories.map((cat: any) => (
           <Link key={cat.id} href={`/categorii/${cat.slug}`} className="group block">
             <Card className="transition-shadow hover:shadow-md">
               <CardContent className="grid gap-3">
@@ -48,7 +48,7 @@ export default async function CategoriesPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
-                  {cat.children.slice(0, 5).map((child) => (
+                  {cat.children.slice(0, 5).map((child: any) => (
                     <Badge key={child.id} variant="secondary" className="text-xs font-normal">
                       {child.name}
                     </Badge>

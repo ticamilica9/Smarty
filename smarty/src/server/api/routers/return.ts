@@ -174,7 +174,7 @@ export const returnRouter = router({
         })
 
         // Atomically update Return, Payment, and Order statuses
-        await ctx.prisma.$transaction(async (tx) => {
+        await ctx.prisma.$transaction(async (tx: any) => {
           await tx.return.update({
             where: { id: input.id },
             data: { status: 'ACCEPTED' },

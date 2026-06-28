@@ -117,7 +117,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             Subcategorii
           </h2>
           <div className="flex flex-wrap gap-2">
-            {category.children.map((child) => (
+            {category.children.map((child: any) => (
               <Link
                 key={child.id}
                 href={`/categorii/${child.slug}`}
@@ -171,7 +171,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           </p>
 
           <ProductGrid
-            products={products.map((p) => ({
+            products={products.map((p: any) => ({
               ...p,
               slug: p.id, // No slug field in schema yet, using id
             }))}
