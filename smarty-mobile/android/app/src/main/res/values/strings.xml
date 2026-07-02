@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Smarty</string>
+    <string name="title_activity_main">Smarty</string>
+    <string name="package_name">ro.smarty.app</string>
+    <string name="custom_url_scheme">ro.smarty.app</string>
+</resources>
