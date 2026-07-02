@@ -1,0 +1,26 @@
+{
+  "name": "smarty-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Smarty mobile app — Capacitor shell for Android and iOS",
+  "scripts": {
+    "sync": "npx cap sync",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "build:android": "npx cap sync android && npx cap open android",
+    "build:ios": "npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.7",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/core": "^7.2.1",
+    "@capacitor/push-notifications": "^7.0.2",
+    "@capacitor/share": "^7.0.2",
+    "@capacitor/splash-screen": "^7.0.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.2.1",
+    "@capacitor/ios": "^7.6.7"
+  }
+}
