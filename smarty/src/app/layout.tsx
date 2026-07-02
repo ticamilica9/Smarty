@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
@@ -6,6 +6,7 @@ import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,10 +18,29 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#d946ef",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
-  title: "Smarty - Platforma de cumparare si vanzare",
+  title: {
+    default: "Smarty - Beauty Marketplace",
+    template: "%s | Smarty",
+  },
   description:
-    "Platforma de cumparare si vanzare produse second-hand, noi si colectii limitate.",
+    "Platforma de cumparat si vandut produse beauty second-hand, noi si colectii limitate.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Smarty",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export default function RootLayout({
@@ -36,6 +56,22 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <TRPCProvider><SessionProvider><CartProvider><NotificationProvider>{children}</NotificationProvider></CartProvider></SessionProvider></TRPCProvider>
         <Toaster />
+        <Script
+          id="register-sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').then(
+                    (registration) => console.log('SW registered:', registration.scope),
+                    (err) => console.log('SW registration failed:', err)
+                  );
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

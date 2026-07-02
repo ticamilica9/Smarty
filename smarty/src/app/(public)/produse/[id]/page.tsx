@@ -361,10 +361,10 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Wishlist count */}
-      {product._count.wishlistItems > 0 && (
+      {(product._count?.wishlistItems ?? 0) > 0 && (
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          {product._count.wishlistItems} persoana
-          {product._count.wishlistItems !== 1 ? 'e' : ''} salveaza acest produs
+          {(product._count?.wishlistItems ?? 0)} persoana
+          {(product._count?.wishlistItems ?? 0) !== 1 ? 'e' : ''} salveaza acest produs
         </p>
       )}
 
