@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
+import { PreviewLogin } from '@/components/auth/preview-login'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -38,6 +39,9 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
+      {/* Preview mode: 1-click login buttons */}
+      <PreviewLogin />
+
       {/* Credentials login */}
       <form onSubmit={handleCredentialsLogin} className="space-y-4">
         <div>
