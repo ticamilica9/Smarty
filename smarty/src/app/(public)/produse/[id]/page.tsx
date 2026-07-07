@@ -140,6 +140,7 @@ export default function ProductDetailPage() {
                 src={images[selectedImage]}
                 alt={product.title}
                 fill
+                unoptimized
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 priority
@@ -170,6 +171,7 @@ export default function ProductDetailPage() {
                       src={url}
                       alt={`${product.title} - imaginea ${i + 1}`}
                       fill
+                      unoptimized
                       className="object-cover"
                       sizes="80px"
                     />
