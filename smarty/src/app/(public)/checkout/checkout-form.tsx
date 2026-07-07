@@ -35,13 +35,14 @@ import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/components/cart/cart-provider"
 import { formatRON } from "@/lib/utils"
 import { trpc } from "@/lib/trpc/client"
+import { IS_PREVIEW_CLIENT } from "@/lib/preview-mode"
 
-if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-  throw new Error("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set")
-}
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-)
+// Stripe is only loaded in production; preview uses mock payment flow
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+const stripePromise =
+  IS_PREVIEW_CLIENT || !stripeKey
+    ? null
+    : loadStripe(stripeKey)
 
 interface CheckoutFormProps {
   userId: string
@@ -364,6 +365,59 @@ export function CheckoutForm({ userId: _userId, productId, offerId }: CheckoutFo
 
   // Payment step
   if (step === "payment" && activePayment?.clientSecret) {
+    // In preview mode, skip Stripe Elements and show mock payment UI
+    if (IS_PREVIEW_CLIENT) {
+      return (
+        <div className="mx-auto max-w-lg">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCardIcon className="size-4" />
+                Plata (Preview)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Comanda #{activePayment.orderId.slice(0, 8)}
+                    </p>
+                    <p className="text-sm font-medium">
+                      {activePayment.productTitle}
+                    </p>
+                  </div>
+                  <p className="text-lg font-semibold tabular-nums">
+                    {formatRON(activePayment.amount)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium">Mod preview — plata nu este reala</p>
+                <p className="text-xs mt-1">
+                  In preview, plata este simulata. Niciun card nu va fi debitat.
+                </p>
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={() => handlePaymentSuccess()}
+              >
+                Simuleaza plata ({formatRON(activePayment.amount)})
+              </Button>
+
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <LockIcon className="size-3" />
+                Plata este simulata — mod preview
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )
+    }
+
+    // Production: real Stripe Elements
     const elementsOptions: StripeElementsOptions = {
       clientSecret: activePayment.clientSecret,
       appearance: {
@@ -385,7 +439,7 @@ export function CheckoutForm({ userId: _userId, productId, offerId }: CheckoutFo
           </CardHeader>
           <CardContent>
             <Elements
-              stripe={stripePromise}
+              stripe={stripePromise!}
               options={elementsOptions}
             >
               <PaymentForm
