@@ -1,46 +1,68 @@
 import Stripe from "stripe"
 import { prisma } from "@/lib/prisma"
+import { isPreviewMode } from "@/lib/preview-mode"
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not set")
+// ── Stripe client (lazy, preview-aware) ──
+
+let _stripe: Stripe | null = null
+
+export function getStripe(): Stripe {
+  if (_stripe) return _stripe
+  if (isPreviewMode()) {
+    // Return a minimal Stripe-like object for preview — the actual
+    // Stripe SDK is never called because all exported functions below
+    // short-circuit in preview mode.
+    _stripe = {} as Stripe
+    return _stripe
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not set")
+  }
+  _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2026-06-24.dahlia",
+  })
+  return _stripe
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2026-06-24.dahlia",
+// Legacy alias for backward compatibility
+export const stripe = new Proxy({} as Stripe, {
+  get(_, prop) { return (getStripe() as any)[prop] }
 })
 
-/**
- * Create a Stripe Express connected account for a seller.
- * Updates the user record with the new stripeConnectId.
- */
+// ── Stripe Connect ──
+
 export async function createStripeAccount(userId: string, email: string) {
-  const account = await stripe.accounts.create({
+  if (isPreviewMode()) {
+    const mockId = `acct_preview_${userId}`
+    await prisma.user.update({
+      where: { id: userId },
+      data: { stripeConnectId: mockId },
+    })
+    return { id: mockId }
+  }
+  const account = await getStripe().accounts.create({
     type: "express",
     country: "RO",
     email,
-    capabilities: {
-      transfers: { requested: true },
-    },
+    capabilities: { transfers: { requested: true } },
     business_type: "individual",
   })
-
   await prisma.user.update({
     where: { id: userId },
     data: { stripeConnectId: account.id },
   })
-
   return account
 }
 
-/**
- * Create an onboarding link for a Stripe Express account.
- */
 export async function createAccountLink(
   accountId: string,
   refreshUrl: string,
   returnUrl: string,
 ) {
-  return stripe.accountLinks.create({
+  if (isPreviewMode()) {
+    return { url: returnUrl }
+  }
+  return getStripe().accountLinks.create({
     account: accountId,
     refresh_url: refreshUrl,
     return_url: returnUrl,
@@ -48,36 +70,44 @@ export async function createAccountLink(
   })
 }
 
-/**
- * Create a PaymentIntent with escrow (manual capture).
- * Funds are held until releaseEscrow is called.
- * Platform fee: 10% (application_fee_amount).
- */
+// ── Payments ──
+
 export async function createPaymentIntent(params: {
-  amount: number // in RON (e.g., 100 = 100 RON)
-  stripeConnectId: string // seller's connected account id
+  amount: number
+  stripeConnectId: string
   orderId: string
   buyerId: string
 }) {
-  const { amount, stripeConnectId, orderId, buyerId: _buyerId } = params
+  const { amount, stripeConnectId, orderId } = params
 
-  const amountBani = Math.round(amount * 100) // convert to bani (cents equivalent)
-  const applicationFee = Math.round(amountBani * 0.1) // 10% platform fee
+  if (isPreviewMode()) {
+    const mockId = `pi_preview_${orderId}`
+    await prisma.payment.create({
+      data: {
+        orderId,
+        stripePaymentIntentId: mockId,
+        amount,
+        status: "HELD",
+      },
+    })
+    return {
+      clientSecret: `${mockId}_secret_preview`,
+      paymentIntentId: mockId,
+    }
+  }
 
-  const paymentIntent = await stripe.paymentIntents.create({
+  const amountBani = Math.round(amount * 100)
+  const applicationFee = Math.round(amountBani * 0.1)
+
+  const paymentIntent = await getStripe().paymentIntents.create({
     amount: amountBani,
     currency: "ron",
     capture_method: "manual",
     application_fee_amount: applicationFee,
-    transfer_data: {
-      destination: stripeConnectId,
-    },
-    metadata: {
-      orderId,
-    },
+    transfer_data: { destination: stripeConnectId },
+    metadata: { orderId },
   })
 
-  // Create payment record in database
   await prisma.payment.create({
     data: {
       orderId,
@@ -93,38 +123,36 @@ export async function createPaymentIntent(params: {
   }
 }
 
-/**
- * Release escrow: capture the PaymentIntent.
- * Called after buyer confirms delivery.
- */
 export async function releaseEscrow(paymentIntentId: string) {
-  const paymentIntent = await stripe.paymentIntents.capture(paymentIntentId)
-
-  // Update payment status in database
+  if (isPreviewMode()) {
+    await prisma.payment.update({
+      where: { stripePaymentIntentId: paymentIntentId },
+      data: { status: "RELEASED", escrowReleasedAt: new Date() },
+    })
+    return { id: paymentIntentId }
+  }
+  const paymentIntent = await getStripe().paymentIntents.capture(paymentIntentId)
   await prisma.payment.update({
     where: { stripePaymentIntentId: paymentIntentId },
-    data: {
-      status: "RELEASED",
-      escrowReleasedAt: new Date(),
-    },
+    data: { status: "RELEASED", escrowReleasedAt: new Date() },
   })
-
   return paymentIntent
 }
 
-/**
- * Refund a PaymentIntent (full refund).
- */
 export async function refundPayment(paymentIntentId: string) {
-  const refund = await stripe.refunds.create({
+  if (isPreviewMode()) {
+    await prisma.payment.update({
+      where: { stripePaymentIntentId: paymentIntentId },
+      data: { status: "REFUNDED" },
+    })
+    return { id: `refund_${paymentIntentId}` }
+  }
+  const refund = await getStripe().refunds.create({
     payment_intent: paymentIntentId,
   })
-
-  // Update payment status in database
   await prisma.payment.update({
     where: { stripePaymentIntentId: paymentIntentId },
     data: { status: "REFUNDED" },
   })
-
   return refund
 }
