@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { signOut } from "next-auth/react"
 import type { Session } from "next-auth"
 
 import { Button } from "@/components/ui/button"
@@ -72,14 +73,14 @@ export function HeaderClient({ user }: HeaderClientProps) {
     : "??"
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-hidden">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8">
         {/* Mobile menu trigger */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger className="lg:hidden inline-flex items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground h-10 w-10">
             <MenuIcon className="size-5" />
           </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
+          <SheetContent side="left" className="w-[85vw] max-w-72 p-0" style={{ paddingTop: 'var(--sat, 0px)' }}>
             <SheetHeader className="border-b px-4 py-4">
               <SheetTitle className="text-left text-lg">Smarty</SheetTitle>
             </SheetHeader>
@@ -189,7 +190,7 @@ export function HeaderClient({ user }: HeaderClientProps) {
             placeholder="Cauta produse..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 w-44 rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none ring-ring transition-colors focus:w-64 focus:border-ring focus:ring-1 lg:w-56 lg:focus:w-72"
+            className="h-9 w-28 sm:w-36 md:w-44 rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none ring-ring transition-colors focus:w-36 sm:focus:w-48 md:focus:w-56 focus:border-ring focus:ring-1 lg:w-56 lg:focus:w-72 max-w-full"
           />
         </div>
 
@@ -298,28 +299,25 @@ export function HeaderClient({ user }: HeaderClientProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link
-                    href="/api/auth/signout"
-                    className="flex w-full items-center gap-2"
-                  >
+                <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })} className="cursor-pointer">
+                  <div className="flex w-full items-center gap-2">
                     <LogOutIcon className="size-4" />
                     Iesire
-                  </Link>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-stretch gap-1 sm:flex-row sm:items-center sm:gap-2">
               <Link
                 href="/login"
-                className="inline-flex h-8 items-center justify-center rounded-lg border border-transparent bg-clip-padding px-2.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="inline-flex h-8 items-center justify-center rounded-lg border border-muted bg-clip-padding px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground shrink-0"
               >
                 Intra in cont
               </Link>
               <Link
                 href="/inregistrare"
-                className="inline-flex h-8 items-center justify-center rounded-lg border border-transparent bg-clip-padding px-2.5 text-sm font-medium whitespace-nowrap bg-primary text-primary-foreground transition-colors hover:bg-primary/80 hidden sm:inline-flex"
+                className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/80 shrink-0"
               >
                 Creeaza cont
               </Link>
