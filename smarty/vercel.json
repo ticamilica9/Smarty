@@ -4,10 +4,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "outputDirectory": ".next",
-  "build": {
-    "env": {
-      "PREVIEW_MODE": "true"
-    }
-  }
+  "outputDirectory": ".next"
 }
