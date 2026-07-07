@@ -182,20 +182,24 @@
     background: linear-gradient(135deg, #5C2D42 0%, #A8466B 30%, #CF7A95 60%, #F2D5E0 100%);
   }
 
-  /* Card hover lift effect */
+  /* Card hover lift effect — only on devices with hover */
   .card-premium {
-    @apply bg-white rounded-xl border border-border shadow-sm transition-all duration-300;
+    @apply bg-white rounded-xl border border-border shadow-sm transition-transform transition-shadow duration-300;
   }
-  .card-premium:hover {
-    @apply shadow-md border-primary/20 -translate-y-0.5;
+  @media (hover: hover) {
+    .card-premium:hover {
+      @apply shadow-md border-primary/20 -translate-y-0.5;
+    }
   }
 
-  /* Premium button with subtle glow */
+  /* Premium button with subtle glow — only on devices with hover */
   .btn-glow {
-    transition: all 0.3s ease;
+    transition: box-shadow 0.3s ease;
   }
-  .btn-glow:hover {
-    box-shadow: 0 0 24px rgba(168, 70, 107, 0.25);
+  @media (hover: hover) {
+    .btn-glow:hover {
+      box-shadow: 0 0 24px rgba(168, 70, 107, 0.25);
+    }
   }
 
   /* Soft text gradient for headings */
@@ -204,5 +208,113 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+}
+
+/* ── Mobile & Capacitor Optimizations ── */
+
+/* Safe area padding for notched devices (iPhone X+, Android with cutout) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  /* Header that accounts for status bar notch */
+  .header-safe {
+    padding-top: calc(env(safe-area-inset-top) + 0.5rem);
+  }
+  /* Bottom nav that accounts for home indicator */
+  .bottom-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+}
+
+/* Disable sticky hover states on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Tap highlight optimization for Android WebView */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* Make interactive elements respond on touch-down instead */
+  a:active, button:active {
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+  }
+}
+
+/* Faster scroll on mobile — hardware-accelerated */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Reduce paint areas — GPU-composited scroll containers */
+.sticky,
+.fixed {
+  will-change: transform;
+}
+
+/* Optimize image rendering on mobile */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  content-visibility: auto;
+}
+
+/* Prevent content shift during font loading */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Segoe UI'), local('Roboto'), local('Helvetica Neue'), local('Arial');
+  size-adjust: 100%;
+  ascent-override: 95%;
+  descent-override: 25%;
+}
+
+/* Reduce animation/transition duration on low-power devices */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Capacitor WebView specific: prevent rubber-banding beyond viewport */
+@supports (-webkit-appearance: none) {
+  body {
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* Fix for Android WebView status bar overlay */
+@supports (padding-top: constant(safe-area-inset-top)) {
+  :root {
+    --sat: constant(safe-area-inset-top);
+    --sar: constant(safe-area-inset-right);
+    --sab: constant(safe-area-inset-bottom);
+    --sal: constant(safe-area-inset-left);
+  }
+}
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
   }
 }
