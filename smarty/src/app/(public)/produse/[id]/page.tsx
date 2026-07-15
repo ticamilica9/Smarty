@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -47,12 +48,31 @@ export default function ProductDetailPage() {
   const [offerDialogOpen, setOfferDialogOpen] = useState(false)
   const [offerAmount, setOfferAmount] = useState('')
 
+  // Trade dialog state
+  const [tradeDialogOpen, setTradeDialogOpen] = useState(false)
+  const [tradeDescription, setTradeDescription] = useState('')
+  const [tradeMoneyDiff, setTradeMoneyDiff] = useState('')
+
   // Offer create mutation
   const createOffer = trpc.offer.create.useMutation({
     onSuccess: () => {
       toast.success('Oferta ta a fost trimisa cu succes!')
       setOfferDialogOpen(false)
       setOfferAmount('')
+      utils.offer.getMyOffers.invalidate()
+    },
+    onError: (error) => {
+      toast.error(error.message)
+    },
+  })
+
+  // Trade offer mutation
+  const createTradeOffer = trpc.offer.create.useMutation({
+    onSuccess: () => {
+      toast.success('Propunerea ta de schimb a fost trimisa!')
+      setTradeDialogOpen(false)
+      setTradeDescription('')
+      setTradeMoneyDiff('')
       utils.offer.getMyOffers.invalidate()
     },
     onError: (error) => {
@@ -126,6 +146,19 @@ export default function ProductDetailPage() {
       return
     }
     createOffer.mutate({ productId: product.id, amount })
+  }
+
+  const handleSubmitTrade = () => {
+    if (!tradeDescription.trim()) {
+      toast.error('Descrie ce oferi la schimb')
+      return
+    }
+    createTradeOffer.mutate({
+      productId: product.id,
+      type: 'TRADE',
+      tradeDescription: tradeDescription.trim(),
+      moneyDifference: tradeMoneyDiff ? parseFloat(tradeMoneyDiff) : undefined,
+    })
   }
 
   return (
@@ -265,6 +298,61 @@ export default function ProductDetailPage() {
               {product.description}
             </p>
           </div>
+
+          {/* Trade info */}
+          {product.acceptTrade && (
+            <>
+              <Separator />
+              <div className="rounded-lg border border-green-200 bg-green-50/50 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">🔄</span>
+                  <h3 className="text-sm font-semibold text-green-900">
+                    Vanzatorul accepta schimb
+                  </h3>
+                </div>
+
+                {product.tradeInterests && (
+                  <div className="mb-3">
+                    <p className="text-xs font-medium text-green-800 mb-1">
+                      Ce il intereseaza:
+                    </p>
+                    <p className="text-sm text-green-700">
+                      {product.tradeInterests}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  {product.acceptMoneyDifference ? (
+                    <Badge className="bg-green-100 text-green-800 text-xs">
+                      ✅ Accepta diferenta de bani
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-xs">
+                      ❌ Nu accepta diferenta de bani
+                    </Badge>
+                  )}
+                </div>
+
+                {!isOwner && session?.user && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-green-300 text-green-800 hover:bg-green-100 hover:text-green-900"
+                    onClick={() => setTradeDialogOpen(true)}
+                    disabled={createTradeOffer.isPending}
+                  >
+                    {createTradeOffer.isPending ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <span className="text-lg mr-1">🔄</span>
+                    )}
+                    Propune un schimb
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
 
           <Separator />
 
@@ -420,6 +508,76 @@ export default function ProductDetailPage() {
                 <MessageSquare className="size-4" />
               )}
               Trimite oferta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trade proposal dialog */}
+      <Dialog open={tradeDialogOpen} onOpenChange={setTradeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Propune un schimb</DialogTitle>
+            <DialogDescription>
+              Descrie ce produs oferi la schimb pentru <strong>{product.title}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="trade-description">
+                Ce oferi la schimb? <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="trade-description"
+                placeholder="Ex: Iti ofer la schimb un ruj Dior nuanta 999, folosit o singura data..."
+                rows={3}
+                value={tradeDescription}
+                onChange={(e) => setTradeDescription(e.target.value)}
+              />
+            </div>
+
+            {product.acceptMoneyDifference && (
+              <div className="space-y-2">
+                <Label htmlFor="trade-money-diff">
+                  Diferenta de bani (RON)
+                </Label>
+                <Input
+                  id="trade-money-diff"
+                  type="number"
+                  step="0.01"
+                  placeholder="Ex: 50 (suma pe care o oferi in plus)"
+                  value={tradeMoneyDiff}
+                  onChange={(e) => setTradeMoneyDiff(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Optional — lasa gol daca propui un schimb fara diferenta de bani.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTradeDialogOpen(false)
+                setTradeDescription('')
+                setTradeMoneyDiff('')
+              }}
+            >
+              Anuleaza
+            </Button>
+            <Button
+              onClick={handleSubmitTrade}
+              disabled={!tradeDescription.trim() || createTradeOffer.isPending}
+            >
+              {createTradeOffer.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <MessageSquare className="size-4" />
+              )}
+              Trimite propunerea
             </Button>
           </DialogFooter>
         </DialogContent>
