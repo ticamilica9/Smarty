@@ -58,6 +58,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     .filter((c): c is NonNullable<typeof c> => c !== null)
   const priceMin = sp.pretMin ? Number(sp.pretMin) : undefined
   const priceMax = sp.pretMax ? Number(sp.pretMax) : undefined
+  const acceptTrade = sp.acceptTrade === 'true' ? true : undefined
 
   const products = await prisma.product.findMany({
     where: {
@@ -72,6 +73,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             },
           }
         : {}),
+      ...(acceptTrade === true ? { acceptTrade: true } : {}),
     },
     include: {
       seller: {
