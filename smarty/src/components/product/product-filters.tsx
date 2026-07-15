@@ -29,6 +29,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
   const activeConditions = searchParams.getAll('stare')
   const activePriceMin = searchParams.get('pretMin')
   const activePriceMax = searchParams.get('pretMax')
+  const activeAcceptTrade = searchParams.get('acceptTrade') === 'true'
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
@@ -49,6 +50,12 @@ export function ProductFilters({ className }: ProductFiltersProps) {
         else params.delete('pretMin')
         if (max) params.set('pretMax', max)
         else params.delete('pretMax')
+      } else if (name === 'acceptTrade') {
+        if (activeAcceptTrade) {
+          params.delete('acceptTrade')
+        } else {
+          params.set('acceptTrade', 'true')
+        }
       }
 
       params.delete('page')
@@ -61,7 +68,7 @@ export function ProductFilters({ className }: ProductFiltersProps) {
     router.push(pathname)
   }, [router, pathname])
 
-  const hasActiveFilters = activeConditions.length > 0 || activePriceMin || activePriceMax
+  const hasActiveFilters = activeConditions.length > 0 || activePriceMin || activePriceMax || activeAcceptTrade
 
   return (
     <aside className={cn('space-y-6', className)}>
@@ -160,6 +167,38 @@ export function ProductFilters({ className }: ProductFiltersProps) {
               </button>
             )
           })}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Trade / Schimb filter */}
+      <div>
+        <h4 className="mb-3 text-sm font-medium">Schimb</h4>
+        <div className="space-y-2">
+          <button
+            onClick={() => {
+              router.push(`${pathname}?${createQueryString('acceptTrade', 'true')}`)
+            }}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted',
+              activeAcceptTrade && 'bg-muted font-medium',
+            )}
+          >
+            <span
+              className={cn(
+                'flex size-4 shrink-0 items-center justify-center rounded-xs border',
+                activeAcceptTrade && 'border-primary bg-primary text-primary-foreground',
+              )}
+            >
+              {activeAcceptTrade && (
+                <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            Doar produse care accepta schimb
+          </button>
         </div>
       </div>
     </aside>
