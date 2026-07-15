@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "next-themes";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
@@ -52,10 +53,13 @@ export default function RootLayout({
     <html
       lang="ro"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
         <TRPCProvider><SessionProvider><CartProvider><NotificationProvider>{children}</NotificationProvider></CartProvider></SessionProvider></TRPCProvider>
         <Toaster />
+        </ThemeProvider>
         <Script
           id="register-sw"
           strategy="afterInteractive"

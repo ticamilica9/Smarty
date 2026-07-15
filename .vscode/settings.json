@@ -1,0 +1,22 @@
+{
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx1G -Xms100m -Xlog:disable -XX:HeapBaseMinAddress=8g -XX:+ExitOnOutOfMemoryError",
+    "java.project.resourceFilters": [
+        "node_modules",
+        ".gradle",
+        "build",
+        ".next",
+        "capacitor-cordova-android-plugins"
+    ],
+    "files.watcherExclude": {
+        "**/.gradle/**": true,
+        "**/build/**": true,
+        "**/.next/**": true,
+        "**/node_modules/**": true
+    },
+    "search.exclude": {
+        "**/.gradle": true,
+        "**/build": true,
+        "**/.next": true
+    }
+}

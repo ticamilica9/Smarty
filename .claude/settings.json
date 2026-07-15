@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill /F /IM \"node.exe\")",
+      "Bash(rm -rf .next)",
+      "PowerShell(& \"c:/Users/activ/Android/platform-tools/adb\" forward --list 2>&1)",
+      "PowerShell(& \"c:/Users/activ/Android/platform-tools/adb\" forward --remove-all 2>&1)",
+      "PowerShell(& \"c:/Users/activ/Android/platform-tools/adb\" forward tcp:9223 localabstract:webview_devtools_remote_9085 2>&1)",
+      "PowerShell(& \"c:/Users/activ/Android/platform-tools/adb\" devices 2>&1)",
+      "PowerShell(& \"c:/Users/activ/Android/platform-tools/adb\" kill-server 2>&1)",
+      "PowerShell(& \"c:/Users/activ/Android/platform-tools/adb\" start-server 2>&1)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:9223/json/version\" -UseBasicParsing 2>&1)",
+      "Bash(wscat --help)",
+      "Bash(curl -s \"http://localhost:3004/api/trpc/product.getLatest?input=%7B%22json%22%3A%7B%22limit%22%3A3%7D%7D\")"
+    ]
+  }
+}

@@ -153,11 +153,16 @@ export default function ProductDetailPage() {
       toast.error('Descrie ce oferi la schimb')
       return
     }
+    const moneyDiff = tradeMoneyDiff ? parseFloat(tradeMoneyDiff) : undefined
+    if (tradeMoneyDiff && (isNaN(moneyDiff!) || moneyDiff! <= 0)) {
+      toast.error('Introdu o suma valida pentru diferenta de bani')
+      return
+    }
     createTradeOffer.mutate({
       productId: product.id,
       type: 'TRADE',
       tradeDescription: tradeDescription.trim(),
-      moneyDifference: tradeMoneyDiff ? parseFloat(tradeMoneyDiff) : undefined,
+      moneyDifference: moneyDiff,
     })
   }
 
@@ -514,7 +519,16 @@ export default function ProductDetailPage() {
       </Dialog>
 
       {/* Trade proposal dialog */}
-      <Dialog open={tradeDialogOpen} onOpenChange={setTradeDialogOpen}>
+      <Dialog
+        open={tradeDialogOpen}
+        onOpenChange={(open) => {
+          setTradeDialogOpen(open)
+          if (!open) {
+            setTradeDescription('')
+            setTradeMoneyDiff('')
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Propune un schimb</DialogTitle>

@@ -1,0 +1,8 @@
+# Secrets
+.env
+.env.local
+.mcp.json
+
+# JVM crash logs
+hs_err_pid*.log
+replay_pid*.log
