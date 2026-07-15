@@ -12,6 +12,7 @@ export interface DemoProduct {
   categoryId: string; condition: string; price: number; brand: string;
   shade: string; skinType: string; images: string[]; status: string;
   featured: boolean; createdAt: Date; updatedAt: Date;
+  acceptTrade: boolean; tradeInterests: string | null; acceptMoneyDifference: boolean;
 }
 
 export interface DemoOrder {
@@ -49,6 +50,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-2', condition: 'LIKE_NEW', price: 35, brand: 'Maybelline',
     shade: '100', skinType: '', images: ['https://picsum.photos/seed/ruj1/600/600', 'https://picsum.photos/seed/ruj1b/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-20'), updatedAt: new Date('2026-06-20'),
+    acceptTrade: true, tradeInterests: 'Rujuri MAC nuanțe nude, gloss-uri Dior', acceptMoneyDifference: true,
   },
   {
     id: 'prod-2', sellerId: 'user-2', title: 'Fond de ten Estée Lauder Double Wear - 2N1',
@@ -56,6 +58,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-4', condition: 'GOOD', price: 120, brand: 'Estée Lauder',
     shade: '2N1', skinType: 'Mixt', images: ['https://picsum.photos/seed/fdt1/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-25'), updatedAt: new Date('2026-06-25'),
+    acceptTrade: false, tradeInterests: null, acceptMoneyDifference: false,
   },
   {
     id: 'prod-3', sellerId: 'user-1', title: 'Paletă de farduri Huda Beauty Rose Gold Remastered',
@@ -63,6 +66,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-3', condition: 'GOOD', price: 180, brand: 'Huda Beauty',
     shade: '', skinType: '', images: ['https://picsum.photos/seed/paleta1/600/600', 'https://picsum.photos/seed/paleta1b/600/600', 'https://picsum.photos/seed/paleta1c/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-26'), updatedAt: new Date('2026-06-26'),
+    acceptTrade: true, tradeInterests: 'Palete Anastasia Beverly Hills, perii profesionale', acceptMoneyDifference: true,
   },
   {
     id: 'prod-4', sellerId: 'user-3', title: 'Gloss Dior Addict Lip Maximizer - 001 Pink',
@@ -70,6 +74,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-2', condition: 'NEW', price: 150, brand: 'Dior',
     shade: '001', skinType: '', images: ['https://picsum.photos/seed/gloss1/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-27'), updatedAt: new Date('2026-06-27'),
+    acceptTrade: false, tradeInterests: null, acceptMoneyDifference: false,
   },
   {
     id: 'prod-5', sellerId: 'user-2', title: 'Serum The Ordinary Niacinamide 10% + Zinc 1%',
@@ -77,6 +82,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-11', condition: 'GOOD', price: 40, brand: 'The Ordinary',
     shade: '', skinType: 'Gras', images: ['https://picsum.photos/seed/serum1/600/600', 'https://picsum.photos/seed/serum1b/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-22'), updatedAt: new Date('2026-06-22'),
+    acceptTrade: false, tradeInterests: null, acceptMoneyDifference: false,
   },
   {
     id: 'prod-6', sellerId: 'user-1', title: 'Cremă hidratantă CeraVe Facial Moisturising Lotion',
@@ -84,6 +90,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-11', condition: 'LIKE_NEW', price: 50, brand: 'CeraVe',
     shade: '', skinType: 'Uscat', images: ['https://picsum.photos/seed/crema1/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-24'), updatedAt: new Date('2026-06-24'),
+    acceptTrade: true, tradeInterests: 'Serumuri The Ordinary, creme hidratante', acceptMoneyDifference: false,
   },
   {
     id: 'prod-10', sellerId: 'user-3', title: 'Parfum YSL Black Opium - 50ml',
@@ -91,6 +98,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-30', condition: 'GOOD', price: 280, brand: 'Yves Saint Laurent',
     shade: '', skinType: '', images: ['https://picsum.photos/seed/parfum1/600/600', 'https://picsum.photos/seed/parfum1b/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-19'), updatedAt: new Date('2026-06-19'),
+    acceptTrade: false, tradeInterests: null, acceptMoneyDifference: false,
   },
   {
     id: 'prod-11', sellerId: 'user-2', title: 'Scrub de corp Coconut Coffee Scrub',
@@ -98,6 +106,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-12', condition: 'NEW', price: 30, brand: 'The Body Shop',
     shade: '', skinType: '', images: ['https://picsum.photos/seed/scrub1/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-28'), updatedAt: new Date('2026-06-28'),
+    acceptTrade: true, tradeInterests: 'Produse îngrijire corp The Body Shop', acceptMoneyDifference: true,
   },
   {
     id: 'prod-12', sellerId: 'user-1', title: 'Set perii machiaj Real Techniques - 5 bucăți',
@@ -105,6 +114,7 @@ export const demoProducts: DemoProduct[] = [
     categoryId: 'cat-1', condition: 'GOOD', price: 90, brand: 'Real Techniques',
     shade: '', skinType: '', images: ['https://picsum.photos/seed/perii1/600/600'],
     status: 'ACTIVE', featured: false, createdAt: new Date('2026-06-18'), updatedAt: new Date('2026-06-18'),
+    acceptTrade: false, tradeInterests: null, acceptMoneyDifference: false,
   },
 ]
 
