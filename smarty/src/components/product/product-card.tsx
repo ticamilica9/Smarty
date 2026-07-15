@@ -15,6 +15,7 @@ export interface ProductCardProduct {
   price: number
   images: string[]
   condition: string
+  acceptTrade?: boolean
   status: string
   slug?: string
   seller?: {
@@ -78,6 +79,15 @@ export function ProductCard({ product, className, showSeller = true }: ProductCa
           >
             {conditionLabel(product.condition)}
           </Badge>
+
+          {/* Trade badge */}
+          {product.acceptTrade && (
+            <Badge
+              className="absolute left-2 top-10 bg-green-100/90 text-green-800 text-xs backdrop-blur-xs"
+            >
+              🔄 Schimb
+            </Badge>
+          )}
 
           {/* Wishlist button */}
           <Button
