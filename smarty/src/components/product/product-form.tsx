@@ -50,6 +50,9 @@ export function ProductForm() {
   const [skinType, setSkinType] = useState('')
   const [images, setImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
+  const [acceptTrade, setAcceptTrade] = useState(false)
+  const [tradeInterests, setTradeInterests] = useState('')
+  const [acceptMoneyDifference, setAcceptMoneyDifference] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,6 +116,9 @@ export function ProductForm() {
       shade: shade.trim() || undefined,
       skinType: skinType.trim() || undefined,
       images,
+      acceptTrade,
+      tradeInterests: acceptTrade ? tradeInterests.trim() || undefined : undefined,
+      acceptMoneyDifference: acceptTrade ? acceptMoneyDifference : false,
     })
   }
 
@@ -245,6 +251,90 @@ export function ProductForm() {
           placeholder="0.00"
           required
         />
+      </div>
+
+      {/* Trade / Schimb */}
+      <div className="space-y-3 rounded-lg border p-4">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🔄</span>
+          <span className="text-sm font-semibold">Schimb</span>
+        </div>
+
+        {/* Accept trade toggle */}
+        <div className="space-y-2">
+          <Label>Accepti schimbul de produse?</Label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="acceptTrade"
+                checked={acceptTrade}
+                onChange={() => setAcceptTrade(true)}
+                className="size-4 accent-primary"
+              />
+              <span className="text-sm">Accept schimb</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="acceptTrade"
+                checked={!acceptTrade}
+                onChange={() => {
+                  setAcceptTrade(false)
+                  setTradeInterests('')
+                  setAcceptMoneyDifference(false)
+                }}
+                className="size-4 accent-primary"
+              />
+              <span className="text-sm">Nu accept schimb</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Conditional trade fields */}
+        {acceptTrade && (
+          <>
+            <div className="space-y-1">
+              <Label htmlFor="tradeInterests">Ce ma intereseaza la schimb?</Label>
+              <Textarea
+                id="tradeInterests"
+                value={tradeInterests}
+                onChange={(e) => setTradeInterests(e.target.value)}
+                placeholder="Ex: Rujuri MAC nuante inchise, palete farduri, parfumuri..."
+                rows={2}
+              />
+              <p className="text-xs text-muted-foreground">
+                Optional — descrie ce tip de produse ai accepta la schimb.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Pot oferi diferenta de bani?</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="moneyDifference"
+                    checked={acceptMoneyDifference}
+                    onChange={() => setAcceptMoneyDifference(true)}
+                    className="size-4 accent-primary"
+                  />
+                  <span className="text-sm">Da</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="moneyDifference"
+                    checked={!acceptMoneyDifference}
+                    onChange={() => setAcceptMoneyDifference(false)}
+                    className="size-4 accent-primary"
+                  />
+                  <span className="text-sm">Nu</span>
+                </label>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Optional fields */}
