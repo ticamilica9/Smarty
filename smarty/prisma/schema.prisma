@@ -164,8 +164,11 @@ model Product {
   price       Float
   brand       String?
   shade       String?
-  skinType    String?
-  images      String[]         @default([])
+  skinType            String?
+  acceptTrade         Boolean          @default(false)
+  tradeInterests      String?          @db.Text
+  acceptMoneyDifference Boolean         @default(false)
+  images              String[]         @default([])
   status      ProductStatus    @default(ACTIVE)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -194,8 +197,11 @@ model Offer {
   amount         Float
   status         OfferStatus @default(PENDING)
   counterOfferId String?
-  round          Int         @default(1)
-  expiresAt      DateTime
+  round             Int              @default(1)
+  type              String           @default("MONEY")
+  tradeDescription  String?          @db.Text
+  moneyDifference   Float?
+  expiresAt         DateTime
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
