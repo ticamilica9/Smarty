@@ -13,6 +13,9 @@ const offerWithIncludes = {
   counterOfferId: true,
   round: true,
   expiresAt: true,
+  type: true,
+  tradeDescription: true,
+  moneyDifference: true,
   createdAt: true,
   updatedAt: true,
   product: {
@@ -45,13 +48,26 @@ export const offerRouter = router({
     .input(
       z.object({
         productId: z.string().min(1),
-        amount: z.number().positive('Oferta trebuie sa fie mai mare decat 0'),
-      }),
+        type: z.enum(['MONEY', 'TRADE']).default('MONEY'),
+        amount: z.number().positive('Oferta trebuie sa fie mai mare decat 0').optional(),
+        tradeDescription: z.string().min(1, 'Descrie ce oferi la schimb').optional(),
+        moneyDifference: z.number().optional(),
+      }).refine(
+        (data) => {
+          if (data.type === 'TRADE' && !data.tradeDescription) {
+            return false
+          }
+          if (data.type === 'MONEY' && !data.amount) {
+            return false
+          }
+          return true
+        },
+        { message: 'Completeaza toate campurile obligatorii' },
+      ),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = (ctx.user as { id: string }).id
 
-      // Fetch the product
       const product = await ctx.prisma.product.findUnique({
         where: { id: input.productId },
       })
@@ -71,12 +87,30 @@ export const offerRouter = router({
         })
       }
 
-      // Offer must be less than list price
-      if (input.amount >= product.price) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Oferta trebuie sa fie mai mica decat pretul afisat',
-        })
+      // For MONEY offers: validate amount
+      if (input.type === 'MONEY') {
+        if (!input.amount || input.amount >= product.price) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Oferta trebuie sa fie mai mica decat pretul afisat',
+          })
+        }
+      }
+
+      // For TRADE offers: verify product accepts trades
+      if (input.type === 'TRADE') {
+        if (!product.acceptTrade) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Acest produs nu accepta schimburi',
+          })
+        }
+        if (input.moneyDifference !== undefined && !product.acceptMoneyDifference) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Vanzatorul nu accepta diferenta de bani',
+          })
+        }
       }
 
       // Check for existing PENDING or COUNTERED offers on this product by this buyer
@@ -96,7 +130,6 @@ export const offerRouter = router({
         })
       }
 
-      // Create offer with 48h expiry
       const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000)
 
       const offer = await ctx.prisma.offer.create({
@@ -104,18 +137,24 @@ export const offerRouter = router({
           productId: input.productId,
           buyerId: userId,
           sellerId: product.sellerId,
-          amount: input.amount,
+          amount: input.amount ?? 0,
+          type: input.type,
+          tradeDescription: input.tradeDescription,
+          moneyDifference: input.moneyDifference,
           round: 1,
           expiresAt,
         },
         include: offerWithIncludes,
       })
 
-      // Notify the seller in real time
+      const notificationMessage = input.type === 'TRADE'
+        ? `Ai primit o propunere de schimb pentru "${product.title}"`
+        : `Ai primit o oferta de ${(input.amount ?? 0).toFixed(2)} RON pentru "${product.title}"`
+
       sendNotification(product.sellerId, {
         type: 'OFFER_RECEIVED',
-        title: 'Oferta noua',
-        message: `Ai primit o oferta de ${input.amount.toFixed(2)} RON pentru "${product.title}"`,
+        title: input.type === 'TRADE' ? 'Propunere de schimb' : 'Oferta noua',
+        message: notificationMessage,
         link: '/cont/oferte',
         metadata: { productId: input.productId, offerId: offer.id },
       }).catch(() => {
