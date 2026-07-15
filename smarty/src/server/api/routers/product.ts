@@ -31,6 +31,9 @@ export const productRouter = router({
         shade: z.string().optional(),
         skinType: z.string().optional(),
         images: z.array(z.string()).default([]),
+        acceptTrade: z.boolean().default(false),
+        tradeInterests: z.string().optional(),
+        acceptMoneyDifference: z.boolean().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -98,6 +101,9 @@ export const productRouter = router({
         skinType: z.string().optional().nullable(),
         images: z.array(z.string()).optional(),
         status: productStatus.optional(),
+        acceptTrade: z.boolean().optional(),
+        tradeInterests: z.string().optional().nullable(),
+        acceptMoneyDifference: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -145,6 +151,7 @@ export const productRouter = router({
         sortBy: z.enum(['newest', 'price_asc', 'price_desc']).optional(),
         limit: z.number().min(1).max(100).default(20),
         offset: z.number().min(0).default(0),
+        acceptTrade: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -167,6 +174,10 @@ export const productRouter = router({
         if (input.minPrice !== undefined) priceFilter.gte = input.minPrice
         if (input.maxPrice !== undefined) priceFilter.lte = input.maxPrice
         where.price = priceFilter
+      }
+
+      if (input.acceptTrade === true) {
+        where.acceptTrade = true
       }
 
       let orderBy: Record<string, string>[]
